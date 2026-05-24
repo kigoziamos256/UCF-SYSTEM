@@ -1,0 +1,476 @@
+/* Brand Colors */
+:root {
+    --brand-purple: #570930;      /* Main purple */
+    --brand-purple-light: #b84ba6;
+    --brand-purple-dark: #4a1d63;
+    --brand-red: #dc3545;          /* Red for alerts/important */
+    --brand-red-dark: #b02a37;
+    --brand-black: #1a1a1a;         /* Black for text */
+    --brand-black-light: #333333;
+    --brand-white: #ffffff;          /* White */
+    --brand-gray: #f8f9fa;          /* Light gray background */
+    --brand-gray-dark: #6c757d;
+}
+
+/* Global Styles */
+body {
+    color: var(--brand-black);
+    background-color: var(--brand-gray);
+}
+
+/* Navbar - Purple Theme */
+.navbar.bg-dark {
+    background-color: var(--brand-purple-dark) !important;
+}
+
+.navbar-brand {
+    color: var(--brand-white) !important;
+    font-weight: bold;
+}
+
+.navbar-brand i {
+    color: var(--brand-white);
+}
+
+.navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    transition: all 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+    color: var(--brand-white) !important;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.navbar-nav .nav-link i {
+    margin-right: 5px;
+}
+
+/* Buttons - Purple Theme */
+.btn-primary {
+    background-color: var(--brand-purple);
+    border-color: var(--brand-purple);
+    color: var(--brand-white);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: var(--brand-purple-dark) !important;
+    border-color: var(--brand-purple-dark) !important;
+}
+
+.btn-outline-primary {
+    color: var(--brand-purple);
+    border-color: var(--brand-purple);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--brand-purple);
+    border-color: var(--brand-purple);
+    color: var(--brand-white);
+}
+
+.btn-danger {
+    background-color: var(--brand-red);
+    border-color: var(--brand-red);
+}
+
+.btn-danger:hover {
+    background-color: var(--brand-red-dark);
+    border-color: var(--brand-red-dark);
+}
+
+/* Cards */
+.card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(111, 44, 145, 0.1);
+    border-radius: 8px;
+}
+
+.card-header {
+    background-color: var(--brand-white);
+    border-bottom: 2px solid var(--brand-purple-light);
+    color: var(--brand-purple-dark);
+    font-weight: 600;
+}
+
+.card-header.bg-primary {
+    background-color: var(--brand-purple) !important;
+    color: var(--brand-white);
+}
+
+.card-header.bg-info {
+    background-color: var(--brand-purple-light) !important;
+    color: var(--brand-white);
+}
+
+.card-header.bg-secondary {
+    background-color: var(--brand-black-light) !important;
+    color: var(--brand-white);
+}
+
+/* Profile Picture */
+.profile-picture {
+    border: 3px solid var(--brand-white);
+    box-shadow: 0 4px 8px rgba(111, 44, 145, 0.2);
+}
+
+.profile-picture-wrapper:hover .profile-picture {
+    border-color: var(--brand-purple);
+}
+
+/* Role Badges */
+.role-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.role-badge.admin {
+    background-color: var(--brand-red);
+    color: var(--brand-white);
+}
+
+.role-badge.leader {
+    background-color: var(--brand-purple);
+    color: var(--brand-white);
+}
+
+.role-badge.member {
+    background-color: var(--brand-black-light);
+    color: var(--brand-white);
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status-badge.completed {
+    background-color: #28a745;
+    color: var(--brand-white);
+}
+
+.status-badge.pending {
+    background-color: var(--brand-purple-light);
+    color: var(--brand-white);
+}
+
+/* Links */
+a {
+    color: var(--brand-purple);
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: var(--brand-purple-dark);
+}
+
+/* Notifications */
+.notification-item.unread {
+    background-color: rgba(111, 44, 145, 0.05);
+    border-left: 3px solid var(--brand-purple);
+}
+
+.notification-badge {
+    background-color: var(--brand-red) !important;
+}
+
+/* Alerts */
+.alert-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: var(--brand-red-dark);
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+    color: #856404;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+/* Dashboard Stats Cards */
+.card.bg-primary {
+    background: linear-gradient(135deg, var(--brand-purple) 0%, var(--brand-purple-dark) 100%) !important;
+}
+
+.card.bg-success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
+}
+
+.card.bg-info {
+    background: linear-gradient(135deg, var(--brand-purple-light) 0%, var(--brand-purple) 100%) !important;
+}
+
+.card.bg-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #d39e00 100%) !important;
+}
+
+/* Footer */
+footer {
+    background-color: var(--brand-purple-dark) !important;
+    color: var(--brand-white);
+}
+
+footer a {
+    color: var(--brand-white);
+    opacity: 0.9;
+}
+
+footer a:hover {
+    color: var(--brand-white);
+    opacity: 1;
+}
+
+/* List Group Items */
+.list-group-item {
+    border-left: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+    border-left-color: var(--brand-purple);
+    background-color: rgba(111, 44, 145, 0.02);
+}
+
+/* Dropdown Menus */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 12px rgba(111, 44, 145, 0.15);
+}
+
+.dropdown-header {
+    color: var(--brand-purple);
+    font-weight: 600;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(111, 44, 145, 0.05);
+    color: var(--brand-purple);
+}
+
+/* Modal Headers */
+.modal-header {
+    background: linear-gradient(135deg, var(--brand-purple) 0%, var(--brand-purple-dark) 100%);
+    color: var(--brand-white);
+    border-bottom: none;
+}
+
+.modal-header .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+/* Pagination */
+.pagination .page-link {
+    color: var(--brand-purple);
+    border-color: #dee2e6;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--brand-purple);
+    border-color: var(--brand-purple);
+    color: var(--brand-white);
+}
+
+.pagination .page-link:hover {
+    color: var(--brand-purple-dark);
+    background-color: rgba(111, 44, 145, 0.1);
+}
+
+/* Form Elements */
+.form-control:focus {
+    border-color: var(--brand-purple-light);
+    box-shadow: 0 0 0 0.2rem rgba(111, 44, 145, 0.25);
+}
+
+.form-select:focus {
+    border-color: var(--brand-purple-light);
+    box-shadow: 0 0 0 0.2rem rgba(111, 44, 145, 0.25);
+}
+
+/* Tables */
+.table thead th {
+    border-bottom: 2px solid var(--brand-purple-light);
+    color: var(--brand-purple-dark);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(111, 44, 145, 0.02);
+}
+
+/* Progress Bars */
+.progress-bar {
+    background-color: var(--brand-purple);
+}
+
+/* Loading Spinner */
+.spinner-border {
+    color: var(--brand-purple) !important;
+}
+
+/* Custom Classes for Brand Colors */
+.text-brand-purple {
+    color: var(--brand-purple) !important;
+}
+
+.text-brand-red {
+    color: var(--brand-red) !important;
+}
+
+.text-brand-black {
+    color: var(--brand-black) !important;
+}
+
+.text-brand-white {
+    color: var(--brand-white) !important;
+}
+
+.bg-brand-purple {
+    background-color: var(--brand-purple) !important;
+}
+
+.bg-brand-purple-dark {
+    background-color: var(--brand-purple-dark) !important;
+}
+
+.bg-brand-red {
+    background-color: var(--brand-red) !important;
+}
+
+.bg-brand-black {
+    background-color: var(--brand-black) !important;
+}
+
+.bg-brand-white {
+    background-color: var(--brand-white) !important;
+}
+
+.border-brand-purple {
+    border-color: var(--brand-purple) !important;
+}
+
+/* Hover Effects */
+.hover-purple:hover {
+    color: var(--brand-purple) !important;
+    transition: color 0.3s ease;
+}
+
+.hover-scale:hover {
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
+}
+
+/* Animations */
+@keyframes pulse-purple {
+    0% {
+        box-shadow: 0 0 0 0 rgba(111, 44, 145, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(111, 44, 145, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(111, 44, 145, 0);
+    }
+}
+
+.pulse-purple {
+    animation: pulse-purple 2s infinite;
+}
+
+
+/* Brand Loader */
+.brand-loader {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(111, 44, 145, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--brand-purple);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Button Variations */
+.btn-purple {
+    background-color: var(--brand-purple);
+    border-color: var(--brand-purple);
+    color: var(--brand-white);
+}
+
+.btn-purple:hover,
+.btn-purple:focus,
+.btn-purple:active {
+    background-color: var(--brand-purple-dark) !important;
+    border-color: var(--brand-purple-dark) !important;
+    color: var(--brand-white) !important;
+}
+
+.btn-outline-purple {
+    color: var(--brand-purple);
+    border-color: var(--brand-purple);
+    background-color: transparent;
+}
+
+.btn-outline-purple:hover {
+    background-color: var(--brand-purple);
+    border-color: var(--brand-purple);
+    color: var(--brand-white);
+}
+
+<span class="role-badge {{ member.role }}">
+    {{ member.get_role_display }}
+</span>
+
+<footer class="bg-brand-purple-dark text-white py-4 mt-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h5><i class="bi bi-church"></i> UCF System</h5>
+                <p>University Christian Fellowship Church Management System</p>
+            </div>
+            <div class="col-md-3">
+                <h6>Quick Links</h6>
+                <ul class="list-unstyled">
+                    <li><a href="{% url 'dashboard' %}" class="text-white-50">Dashboard</a></li>
+                    <li><a href="{% url 'member_list' %}" class="text-white-50">Members</a></li>
+                    <li><a href="{% url 'calendar' %}" class="text-white-50">Calendar</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h6>Contact</h6>
+                <ul class="list-unstyled">
+                    <li><i class="bi bi-envelope"></i> info@ucf.org</li>
+                    <li><i class="bi bi-telephone"></i> +1 234 567 890</li>
+                </ul>
+            </div>
+        </div>
+        <hr class="bg-white opacity-25">
+        <div class="text-center">
+            <small>&copy; {% now "Y" %} UCF. All rights reserved.</small>
+        </div>
+    </div>
+</footer>
