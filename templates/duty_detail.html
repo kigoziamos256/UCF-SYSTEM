@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Duty Detail</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Duty Detail</h1>
+        <nav>
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+        </nav>
+    </header>
+
+    <main>
+        <p><strong>Description:</strong> {{ duty.description }}</p>
+        <p><strong>Assigned to:</strong> {{ duty.member.user.get_full_name }}</p>
+        <p><strong>Completed:</strong> {% if duty.completed %}Yes{% else %}No{% endif %}</p>
+        <p><strong>Due Date:</strong> {{ duty.due_date|date:"M d, Y H:i" }}</p>
+    </main>
+
+    <footer>
+        <p>&copy; {{ now.year }} Church Management System</p>
+    </footer>
+</body>
+</html>

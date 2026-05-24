@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Member Registration</title>
+
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="container mt-5">
+
+<h2>Church Member Registration</h2>
+
+<form method="POST">
+
+{% csrf_token %}
+
+<div class="mb-3">
+<label>Username</label>
+{{ form.username }}
+</div>
+
+<div class="mb-3">
+<label>Email</label>
+{{ form.email }}
+</div>
+
+<div class="mb-3">
+<label>Password</label>
+{{ form.password }}
+</div>
+
+<div class="mb-3">
+<label>Department</label>
+{{ form.department }}
+</div>
+
+<button type="submit" class="btn btn-primary">
+Register
+</button>
+
+<a href="{% url 'login' %}" class="btn btn-secondary">
+Login
+</a>
+
+</form>
+
+</div>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <h3>User Info</h3>
+  {{ user_form.as_p }}
+
+  <h3>Member Profile</h3>
+  {{ member_form.as_p }}
+
+  <button type="submit">Register</button>
+</form>
+
+</body>
+</html>

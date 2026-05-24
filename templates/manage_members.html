@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Members</title>
+</head>
+<body>
+
+    <h2>Manage Members</h2>
+
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Role</th>
+        </tr>
+
+        {% for member in members %}
+        <tr>
+            <td>{{ member.first_name }} {{ member.last_name }}</td>
+            <td>{{ member.email }}</td>
+            <td>{{ member.phone }}</td>
+            <td>{{ member.role }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>

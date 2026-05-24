@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load profile_tags %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="profile-picture-upload">
+                        {% profile_picture user 150 'mb-3' %}
+                        <div class="upload-overlay" data-bs-toggle="modal" data-bs-target="#uploadPictureModal">
+                            <i class="bi bi-camera"></i> Change
+                        </div>
+                    </div>
+                    
+                    <h3>{{ user.get_full_name|default:user.username }}</h3>
+                    <p class="text-muted">{{ user.email }}</p>
+                    
+                    <span class="role-badge {{ member.role }} d-inline-block mb-3">
+                        {{ member.get_role_display }}
+                    </span>
+                    
+                    {% if member.department %}
+                    <p class="mb-1">
+                        <i class="bi bi-building"></i> {{ member.department.name }}
+                    </p>
+                    {% endif %}
+                    
+                    <p class="mb-1">
+                        <i class="bi bi-calendar-check"></i> Member since: {{ member.date_joined|date:"M Y" }}
+                    </p>
+                    
+                    <hr>
+                    
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#uploadPictureModal">
+                            <i class="bi bi-camera"></i> Update Profile Picture
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats Card -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Stats</h5>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h3>{{ events_attended|default:0 }}</h3>
+                            <small class="text-muted">Events</small>
+                        </div>
+                        <div class="col-4">
+                            <h3>{{ duties_completed|default:0 }}</h3>
+                            <small class="text-muted">Duties</small>
+                        </div>
+                        <div class="col-4">
+                            <h3>{{ announcements_count|default:0 }}</h3>
+                            <small class="text-muted">Announcements</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <!-- Personal Information Card -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" value="{{ user.username }}" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" value="{{ user.email }}" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name</label>
+                                <input type="text" class="form-control" value="{{ user.first_name }}" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" class="form-control" value="{{ user.last_name }}" readonly>
+                            </div>
+                            {% if member.phone_number %}
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone Number</label>
+                                <input type="text" class="form-control" value="{{ member.phone_number }}" readonly>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Upcoming Events -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Upcoming Events</h5>
+                    <a href="{% url 'calendar' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_events %}
+                        <div class="list-group">
+                            {% for event in upcoming_events %}
+                            <a href="{% url 'event_detail' event.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ event.title }}</h6>
+                                    <small>{{ event.event_date|date:"M d, Y" }}</small>
+                                </div>
+                                <p class="mb-1 text-muted small">{{ event.description|truncatechars:100 }}</p>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No upcoming events</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Pending Duties -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">My Duties</h5>
+                </div>
+                <div class="card-body">
+                    {% if pending_duties %}
+                        <div class="list-group">
+                            {% for duty in pending_duties %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ duty.title }}</h6>
+                                    <span class="badge {% if duty.completed %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ duty.completed|yesno:"Completed,Pending" }}
+                                    </span>
+                                </div>
+                                <p class="mb-1 text-muted small">{{ duty.description|truncatechars:100 }}</p>
+                                <small class="text-muted">Due: {{ duty.duty_date|date:"M d, Y" }}</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No duties assigned</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Picture Modal -->
+<div class="modal fade" id="uploadPictureModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Profile Picture</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" enctype="multipart/form-data" action="{% url 'profile' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        {% profile_picture user 150 'mb-3' %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="profile_picture" class="form-label">Choose new profile picture</label>
+                        <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*">
+                        <div class="form-text">Maximum file size: 5MB. Supported formats: JPG, PNG, GIF</div>
+                    </div>
+                    
+                    <!-- Preview -->
+                    <div class="text-center mt-3" id="previewContainer" style="display: none;">
+                        <img id="preview" src="#" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 50%;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Upload Picture</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('profile_picture').addEventListener('change', function(e) {
+    const preview = document.getElementById('preview');
+    const previewContainer = document.getElementById('previewContainer');
+    const file = e.target.files[0];
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            previewContainer.style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+    } else {
+        previewContainer.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ announcement.title }}</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+<body>
+    <header>
+        <h1>{{ announcement.title }}</h1>
+        <nav>
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+        </nav>
+    </header>
+
+    <main>
+        <p><strong>Date Posted:</strong> {{ announcement.date_posted|date:"M d, Y H:i" }}</p>
+        <p>{{ announcement.content }}</p>
+    </main>
+
+    <footer>
+        <p>&copy; {{ now.year }} Church Management System</p>
+    </footer>
+</body>
+</html>

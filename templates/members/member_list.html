@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load profile_tags %}
+
+{% block title %}Members List{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-people"></i> Church Members</h2>
+        
+        <!-- Search Form -->
+        <form method="get" class="d-flex">
+            <div class="input-group">
+                <input type="text" name="q" class="form-control" placeholder="Search members..." value="{{ request.GET.q }}">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i>
+                </button>
+                {% if request.GET.q %}
+                <a href="{% url 'member_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    
+    <!-- Members Grid -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for member in members %}
+        <div class="col">
+            <div class="card h-100 shadow-sm hover-card">
+                <div class="card-body text-center">
+                    <!-- Profile Picture with Link -->
+                    <a href="{% url 'member_detail' member.id %}" class="text-decoration-none">
+                        {% profile_picture member.user 120 'mb-3 border border-3 border-primary' %}
+                    </a>
+                    
+                    <h5 class="card-title">
+                        <a href="{% url 'member_detail' member.id %}" class="text-decoration-none text-dark">
+                            {{ member.user.get_full_name|default:member.user.username }}
+                        </a>
+                    </h5>
+                    
+                    <p class="card-text">
+                        <span class="role-badge {{ member.role }}">
+                            {{ member.get_role_display }}
+                        </span>
+                    </p>
+                    
+                    {% if member.department %}
+                        <p class="card-text">
+                            <small class="text-muted">
+                                <i class="bi bi-building"></i> {{ member.department.name }}
+                            </small>
+                        </p>
+                    {% endif %}
+                    
+                    <p class="card-text">
+                        <small class="text-muted">
+                            <i class="bi bi-envelope"></i> {{ member.user.email }}
+                        </small>
+                    </p>
+                    
+                    <div class="mt-3">
+                        <a href="{% url 'member_detail' member.id %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-person"></i> View Profile
+                        </a>
+                        {% if user.member.role == 'admin' %}
+                            <button class="btn btn-outline-secondary btn-sm" onclick="editMember({{ member.id }})">
+                                <i class="bi bi-pencil"></i> Edit
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Member Stats -->
+                <div class="card-footer bg-transparent">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <small class="fw-bold">{{ member.user.events_joined.count }}</small>
+                            <small class="text-muted d-block">Events</small>
+                        </div>
+                        <div class="col-4">
+                            <small class="fw-bold">{{ member.user.duties.count }}</small>
+                            <small class="text-muted d-block">Duties</small>
+                        </div>
+                        <div class="col-4">
+                            <small class="fw-bold">{{ member.user.announcements.count }}</small>
+                            <small class="text-muted d-block">Posts</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="bi bi-info-circle"></i> No members found.
+                {% if request.GET.q %}
+                <br>Try a different search term.
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .hover-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load profile_tags %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Welcome Section with Profile -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        {% profile_picture user 80 'me-3 border border-3 border-primary' %}
+                        <div>
+                            <h2>Welcome back, {{ user.get_full_name|default:user.username }}!</h2>
+                            <p class="text-muted mb-0">
+                                <span class="role-badge {{ user.member.role }} me-2">{{ user.member.get_role_display }}</span>
+                                {% if user.member.department %}
+                                <i class="bi bi-building"></i> {{ user.member.department.name }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3>{{ total_members }}</h3>
+                            <small>Total Members</small>
+                        </div>
+                        <i class="bi bi-people fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3>{{ total_events }}</h3>
+                            <small>Total Events</small>
+                        </div>
+                        <i class="bi bi-calendar-event fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3>{{ total_duties }}</h3>
+                            <small>Total Duties</small>
+                        </div>
+                        <i class="bi bi-check2-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3>{{ announcements.count }}</h3>
+                            <small>Announcements</small>
+                        </div>
+                        <i class="bi bi-megaphone fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions (for admin/leader) -->
+    {% if user.member.role == 'admin' or user.member.role == 'leader' %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex gap-2 flex-wrap">
+                        {% if user.member.role == 'admin' %}
+                        <a href="{% url 'create_event' %}" class="btn btn-primary">
+                            <i class="bi bi-calendar-plus"></i> Create Event
+                        </a>
+                        <a href="{% url 'create_department' %}" class="btn btn-secondary">
+                            <i class="bi bi-building-add"></i> New Department
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'assign_duty' %}" class="btn btn-warning">
+                            <i class="bi bi-check2-circle"></i> Assign Duty
+                        </a>
+                        <a href="{% url 'create_announcement' %}" class="btn btn-info">
+                            <i class="bi bi-megaphone"></i> Post Announcement
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Upcoming Events -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Upcoming Events</h5>
+                    <a href="{% url 'calendar' %}" class="btn btn-sm btn-outline-primary">View Calendar</a>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_events %}
+                        <div class="list-group">
+                            {% for event in upcoming_events %}
+                                <a href="{% url 'event_detail' event.id %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex align-items-center">
+                                        {% profile_picture event.created_by 30 'me-2' %}
+                                        <div class="flex-grow-1">
+                                            <strong>{{ event.title }}</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                {{ event.event_date|date:"M d, Y H:i" }} at {{ event.location }}
+                                                {% if event.department %}
+                                                • {{ event.department.name }}
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <span class="badge bg-primary">{{ event.attendees.count }} going</span>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No upcoming events</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Duties -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">My Pending Duties</h5>
+                </div>
+                <div class="card-body">
+                    {% if pending_duties %}
+                        <div class="list-group">
+                            {% for duty in pending_duties %}
+                                <div class="list-group-item">
+                                    <div class="d-flex align-items-center">
+                                        {% profile_picture duty.assigned_to 30 'me-2' %}
+                                        <div class="flex-grow-1">
+                                            <strong>{{ duty.title }}</strong>
+                                            <span class="badge bg-warning ms-2">Pending</span>
+                                            <br>
+                                            <small class="text-muted">
+                                                Due: {{ duty.duty_date|date:"M d, Y" }}
+                                                • {{ duty.department.name }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No pending duties</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Announcements -->
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Announcements</h5>
+                    <a href="{% url 'announcements' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if announcements %}
+                        {% for announcement in announcements %}
+                            <div class="mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                                <div class="d-flex align-items-start">
+                                    {% profile_picture announcement.created_by 40 'me-2' %}
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between">
+                                            <h6 class="mb-1">{{ announcement.title }}</h6>
+                                            <small class="text-muted">{{ announcement.date_posted|timesince }} ago</small>
+                                        </div>
+                                        <p class="mb-1 text-muted">{{ announcement.message|truncatechars:150 }}</p>
+                                        <small class="text-muted">
+                                            Posted by {{ announcement.created_by.get_full_name|default:announcement.created_by.username }}
+                                            {% if announcement.department %}
+                                            in {{ announcement.department.name }}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No announcements</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
