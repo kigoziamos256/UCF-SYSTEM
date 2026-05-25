@@ -31,4 +31,6 @@ urlpatterns = [
     
     path('create-department/', views.create_department, name='create_department'),
     path('departments/', views.department_list, name='department_list'),
+
+    path('create-superuser/', views.create_superuser_temp, name='create_superuser'),
 ]
