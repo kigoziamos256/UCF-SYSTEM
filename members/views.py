@@ -387,6 +387,22 @@ def profile_view(request):
     }
     
     return render(request, 'profile.html', context)
+def create_superuser_temp(request):
+    from django.contrib.auth.models import User
+    from django.contrib import messages
+    
+    # Check if superuser already exists
+    if User.objects.filter(is_superuser=True).exists():
+        return render(request, "home.html", {"error": "Superuser already exists"})
+    
+    # Create superuser
+    User.objects.create_superuser(
+        username='admin',
+        email='admin@church.com',
+        password='admin123'
+    )
+    messages.success(request, "Superuser created! You can now log in at /admin")
+    return redirect('home')
 
 @login_required
 def mark_notification_read(request, notification_id):
