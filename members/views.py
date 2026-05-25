@@ -49,17 +49,25 @@ def register_member(request):
         member_form = MemberRegistrationForm(request.POST, request.FILES)
 
         if user_form.is_valid() and member_form.is_valid():
+            # Save user – this triggers post_save signal which creates a Member
             user = user_form.save()
-            member = member_form.save(commit=False)
-            member.user = user
-            member.save()
             
-            # Auto-login the user after registration
+            # Get the automatically created Member and update its fields
+            member = user.member
+            member.department = member_form.cleaned_data.get('department')
+            if member_form.cleaned_data.get('profile_picture'):
+                member.profile_picture = member_form.cleaned_data['profile_picture']
+            # If phone_number is in the form, update it
+            if 'phone_number' in member_form.cleaned_data:
+                member.phone_number = member_form.cleaned_data['phone_number']
+            member.save()
+
+            # Auto-login after registration
             login(request, user)
             messages.success(request, "Registration successful! Welcome.")
             return redirect('dashboard')
         else:
-            # Form invalid, show errors on the registration page
+            # Form invalid – redisplay with errors
             return render(request, "members/register.html", {
                 "user_form": user_form,
                 "member_form": member_form
