@@ -2,6 +2,7 @@ from django.contrib.auth import login
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -49,20 +50,28 @@ def register_member(request):
 
         if user_form.is_valid() and member_form.is_valid():
             user = user_form.save()
-            
-            # Create member profile
             member = member_form.save(commit=False)
             member.user = user
             member.save()
-
+            
+            # Auto-login the user after registration
             login(request, user)
-            messages.success(request, "Registration successful!")
+            messages.success(request, "Registration successful! Welcome.")
             return redirect('dashboard')
+        else:
+            # Form invalid, show errors on the registration page
+            return render(request, "members/register.html", {
+                "user_form": user_form,
+                "member_form": member_form
+            })
     else:
         user_form = UserRegisterForm()
         member_form = MemberRegistrationForm()
 
-    return redirect('dashboard')
+    return render(request, "members/register.html", {
+        "user_form": user_form,
+        "member_form": member_form
+    })
 
 @login_required
 def member_list(request):
@@ -71,10 +80,10 @@ def member_list(request):
     
     if query:
         members = members.filter(
-            models.Q(user__username__icontains=query) |
-            models.Q(user__first_name__icontains=query) |
-            models.Q(user__last_name__icontains=query) |
-            models.Q(department__name__icontains=query)
+            Q(user__username__icontains=query) |
+            Q(user__first_name__icontains=query) |
+            Q(user__last_name__icontains=query) |
+            Q(department__name__icontains=query)
         )
     
     return render(request, "members/member_list.html", {"members": members})
