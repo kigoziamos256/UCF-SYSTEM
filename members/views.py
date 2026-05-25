@@ -62,10 +62,7 @@ def register_member(request):
         user_form = UserRegisterForm()
         member_form = MemberRegistrationForm()
 
-    return render(request, "members/register.html", {
-        "user_form": user_form,
-        "member_form": member_form
-    })
+    return redirect('dashboard')
 
 @login_required
 def member_list(request):
