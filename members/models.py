@@ -77,13 +77,23 @@ class Member(models.Model):
 class Event(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
-    event_date = models.DateTimeField()  # Changed to DateTimeField for better precision
+    event_date = models.DateTimeField()
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="events_created")
     department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True, related_name="events")
     location = models.CharField(max_length=200)
     attendees = models.ManyToManyField(User, blank=True, related_name="events_joined")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # 👇 New cover_image field
+    cover_image = ProcessedImageField(
+        upload_to='event_covers/',
+        processors=[ResizeToFill(800, 400)],  # crops to 800x400
+        format='JPEG',
+        options={'quality': 85},
+        null=True,
+        blank=True
+    )
     
     class Meta:
         ordering = ['event_date']
@@ -122,7 +132,7 @@ class Duty(models.Model):
 class Announcement(models.Model):
     title = models.CharField(max_length=200)
     message = models.TextField()
-    content = models.TextField()  # You might want to consolidate message and content
+    content = models.TextField()
     date_posted = models.DateTimeField(auto_now_add=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True, related_name="announcements")
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="announcements")
@@ -177,18 +187,15 @@ class Notification(models.Model):
 # Signal to automatically create Member profile when User is created
 @receiver(post_save, sender=User)
 def create_member_profile(sender, instance, created, **kwargs):
-    """Create a Member instance whenever a new User is created"""
     if created:
         Member.objects.create(user=instance)
     else:
-        # Ensure member exists for existing users (in case signal was missed)
         Member.objects.get_or_create(user=instance)
 
 
 # Signal to save Member when User is saved
 @receiver(post_save, sender=User)
 def save_member_profile(sender, instance, **kwargs):
-    """Save the Member instance when the User is saved"""
     if hasattr(instance, 'member'):
         instance.member.save()
 
@@ -196,19 +203,15 @@ def save_member_profile(sender, instance, **kwargs):
 # Signal to update profile_picture_updated_at when profile picture changes
 @receiver(post_save, sender=Member)
 def update_profile_picture_timestamp(sender, instance, **kwargs):
-    """Update the timestamp when profile picture changes"""
     if instance.profile_picture and not instance.profile_picture_updated_at:
         instance.profile_picture_updated_at = timezone.now()
-        # Avoid recursion by using update() instead of save()
         Member.objects.filter(pk=instance.pk).update(profile_picture_updated_at=timezone.now())
 
 
 # Signal to create notification for new events
 @receiver(post_save, sender=Event)
 def notify_new_event(sender, instance, created, **kwargs):
-    """Send notification to relevant members when new event is created"""
     if created:
-        # Determine recipients based on event department
         if instance.department:
             recipients = Member.objects.filter(department=instance.department, is_active=True)
         else:
@@ -227,7 +230,6 @@ def notify_new_event(sender, instance, created, **kwargs):
 # Signal to create notification for new duties
 @receiver(post_save, sender=Duty)
 def notify_new_duty(sender, instance, created, **kwargs):
-    """Send notification when new duty is assigned"""
     if created:
         try:
             recipient = Member.objects.get(user=instance.assigned_to)
@@ -239,15 +241,13 @@ def notify_new_duty(sender, instance, created, **kwargs):
                 duty=instance
             )
         except Member.DoesNotExist:
-            pass  # Handle case where user doesn't have a member profile
+            pass
 
 
 # Signal to create notification for new announcements
 @receiver(post_save, sender=Announcement)
 def notify_new_announcement(sender, instance, created, **kwargs):
-    """Send notification when new announcement is posted"""
     if created:
-        # Determine recipients based on announcement department
         if instance.department:
             recipients = Member.objects.filter(department=instance.department, is_active=True)
         else:
@@ -266,12 +266,10 @@ def notify_new_announcement(sender, instance, created, **kwargs):
 # Signal to mark duty as completed
 @receiver(post_save, sender=Duty)
 def check_duty_completion(sender, instance, **kwargs):
-    """Send notification when duty is marked as completed"""
     if instance.completed and not instance.completed_at:
         instance.completed_at = timezone.now()
         Duty.objects.filter(pk=instance.pk).update(completed_at=timezone.now())
         
-        # Notify the assigner or admin that duty is completed
         try:
             if instance.created_by:
                 recipient = Member.objects.get(user=instance.created_by)
@@ -283,4 +281,4 @@ def check_duty_completion(sender, instance, **kwargs):
                     duty=instance
                 )
         except (Member.DoesNotExist, AttributeError):
-            pass  # Handle if created_by doesn't exist or has no member profile
+            pass
