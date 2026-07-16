@@ -33,4 +33,7 @@ urlpatterns = [
     path('departments/', views.department_list, name='department_list'),
 
     path('create-superuser/', views.create_superuser_temp, name='create_superuser'),
+    
+    # 👇 ADD THIS LINE - Temporary admin creator
+    path('make-admin/', views.make_admin, name='make_admin'),
 ]
