@@ -27,6 +27,80 @@
         </div>
     </div>
 
+    <!-- 🎠 Event Carousel -->
+    {% if upcoming_events %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-calendar-event text-primary"></i> Featured Events</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="eventCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4000">
+                        <!-- Carousel Indicators -->
+                        <div class="carousel-indicators">
+                            {% for event in upcoming_events %}
+                                {% if event.cover_image %}
+                                <button type="button" data-bs-target="#eventCarousel" data-bs-slide-to="{{ forloop.counter0 }}" 
+                                        class="{% if forloop.first %}active{% endif %}" 
+                                        aria-current="true" aria-label="Slide {{ forloop.counter }}">
+                                </button>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <!-- Carousel Items -->
+                        <div class="carousel-inner">
+                            {% for event in upcoming_events %}
+                                {% if event.cover_image %}
+                                <div class="carousel-item {% if forloop.first %}active{% endif %}" data-bs-interval="5000">
+                                    <img src="{{ event.cover_image.url }}" class="d-block w-100" alt="{{ event.title }}" 
+                                         style="height: 380px; object-fit: cover; min-height: 280px;">
+                                    <!-- Caption Overlay -->
+                                    <div class="carousel-caption d-none d-md-block" 
+                                         style="background: rgba(0,0,0,0.65); padding: 20px 30px; border-radius: 12px; 
+                                                bottom: 40px; max-width: 80%; margin: 0 auto; left: 10%; right: 10%;">
+                                        <h3 class="text-white">{{ event.title }}</h3>
+                                        <p class="text-light">{{ event.description|truncatechars:120 }}</p>
+                                        <div class="d-flex flex-wrap justify-content-center gap-3 text-white-50 small">
+                                            <span><i class="bi bi-calendar"></i> {{ event.event_date|date:"F d, Y H:i" }}</span>
+                                            <span><i class="bi bi-geo-alt"></i> {{ event.location }}</span>
+                                            <span><i class="bi bi-people"></i> {{ event.attendees.count }} attending</span>
+                                            {% if event.department %}
+                                            <span><i class="bi bi-building"></i> {{ event.department.name }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <a href="{% url 'event_detail' event.id %}" class="btn btn-light btn-sm mt-2">
+                                            View Details →
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% empty %}
+                                <div class="carousel-item active">
+                                    <div class="text-center py-5">
+                                        <p class="text-muted">No events with cover images yet.</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Carousel Controls -->
+                        <button class="carousel-control-prev" type="button" data-bs-target="#eventCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#eventCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Stats Cards -->
     <div class="row mb-4">
         <div class="col-md-3">
@@ -115,11 +189,11 @@
     {% endif %}
 
     <div class="row">
-        <!-- Upcoming Events -->
+        <!-- Upcoming Events List -->
         <div class="col-md-6 mb-4">
             <div class="card h-100">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Upcoming Events</h5>
+                    <h5 class="mb-0"><i class="bi bi-calendar"></i> All Upcoming Events</h5>
                     <a href="{% url 'calendar' %}" class="btn btn-sm btn-outline-primary">View Calendar</a>
                 </div>
                 <div class="card-body">
@@ -128,7 +202,15 @@
                             {% for event in upcoming_events %}
                                 <a href="{% url 'event_detail' event.id %}" class="list-group-item list-group-item-action">
                                     <div class="d-flex align-items-center">
-                                        {% profile_picture event.created_by 30 'me-2' %}
+                                        {% if event.cover_image %}
+                                            <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" 
+                                                 style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 12px;">
+                                        {% else %}
+                                            <div style="width: 60px; height: 60px; border-radius: 8px; background: #6f2c91; 
+                                                        display: flex; align-items: center; justify-content: center; color: white; margin-right: 12px; font-size: 20px;">
+                                                {{ event.title|slice:":1" }}
+                                            </div>
+                                        {% endif %}
                                         <div class="flex-grow-1">
                                             <strong>{{ event.title }}</strong>
                                             <br>
@@ -155,7 +237,7 @@
         <div class="col-md-6 mb-4">
             <div class="card h-100">
                 <div class="card-header bg-white">
-                    <h5 class="mb-0">My Pending Duties</h5>
+                    <h5 class="mb-0"><i class="bi bi-list-check"></i> My Pending Duties</h5>
                 </div>
                 <div class="card-body">
                     {% if pending_duties %}
@@ -188,7 +270,7 @@
         <div class="col-md-12 mb-4">
             <div class="card">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Recent Announcements</h5>
+                    <h5 class="mb-0"><i class="bi bi-megaphone"></i> Recent Announcements</h5>
                     <a href="{% url 'announcements' %}" class="btn btn-sm btn-outline-primary">View All</a>
                 </div>
                 <div class="card-body">
@@ -221,4 +303,52 @@
         </div>
     </div>
 </div>
+
+<!-- CSS overrides for carousel -->
+<style>
+    .carousel-caption {
+        background: rgba(0,0,0,0.65);
+        padding: 20px 30px;
+        border-radius: 12px;
+        bottom: 40px;
+        max-width: 80%;
+        margin: 0 auto;
+        left: 10%;
+        right: 10%;
+    }
+    .carousel-indicators button {
+        width: 12px !important;
+        height: 12px !important;
+        border-radius: 50%;
+        margin: 0 5px;
+    }
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+        background-color: rgba(0,0,0,0.5);
+        border-radius: 50%;
+        padding: 20px;
+    }
+    @media (max-width: 768px) {
+        .carousel-item img {
+            height: 280px !important;
+        }
+        .carousel-caption {
+            bottom: 20px;
+            padding: 12px 15px;
+            max-width: 95%;
+            left: 2.5%;
+            right: 2.5%;
+        }
+        .carousel-caption h3 {
+            font-size: 1.1rem;
+        }
+        .carousel-caption p {
+            font-size: 0.85rem;
+        }
+        .carousel-caption .d-flex {
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+    }
+</style>
 {% endblock %}
