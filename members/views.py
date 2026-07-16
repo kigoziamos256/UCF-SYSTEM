@@ -37,6 +37,19 @@ def home(request):
 # MEMBER MANAGEMENT
 # -------------------------
 
+def make_admin(request):
+    from django.contrib.auth.models import User
+    from django.shortcuts import redirect
+    from django.contrib import messages
+    
+    if User.objects.filter(is_superuser=True).exists():
+        messages.info(request, "Superuser already exists.")
+    else:
+        User.objects.create_superuser('admin', 'admin@church.com', 'admin123')
+        messages.success(request, "Superuser created! Username: admin, Password: admin123")
+    
+    return redirect('/admin/')
+
 @login_required
 @admin_required
 def manage_members(request):
