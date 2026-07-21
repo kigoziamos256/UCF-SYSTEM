@@ -35,8 +35,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'cloudinary_storage',        # <-- ADD THIS (must be above 'cloudinary')
-    'cloudinary',                # <-- ADD THIS
+    'cloudinary_storage',
+    'cloudinary',
     'imagekit',
     'members',
 ]
@@ -75,13 +75,34 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ucf.wsgi.application'
 
-# Database - uses DATABASE_URL environment variable if set, otherwise falls back to SQLite
-DATABASES = {
-    'default': dj_database_url.config(
-        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
-        conn_max_age=600
-    )
-}
+# Database - try to use DATABASE_URL if valid, otherwise fallback to SQLite
+import dj_database_url
+import os
+
+database_url = os.environ.get('DATABASE_URL', '').strip()
+
+if database_url:
+    try:
+        DATABASES = {
+            'default': dj_database_url.parse(database_url, conn_max_age=600)
+        }
+        print("✅ Connected to PostgreSQL database via DATABASE_URL")
+    except Exception as e:
+        print(f"⚠️ Error parsing DATABASE_URL: {e}. Falling back to SQLite.")
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+else:
+    print("⚠️ No DATABASE_URL found. Using SQLite.")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -120,7 +141,6 @@ CSRF_TRUSTED_ORIGINS = [
     'https://ucf-system.onrender.com',
 ]
 
-# For local development (if DEBUG is True)
 if DEBUG:
     CSRF_TRUSTED_ORIGINS.append('http://localhost:8000')
     CSRF_TRUSTED_ORIGINS.append('http://127.0.0.1:8000')
