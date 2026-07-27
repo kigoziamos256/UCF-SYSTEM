@@ -1,24 +1,156 @@
-/* Brand Colors */
+/* ========================================
+   BRAND COLORS
+   ======================================== */
 :root {
-    --brand-purple: #570930;      /* Main purple */
+    --brand-purple: #570930;
     --brand-purple-light: #b84ba6;
     --brand-purple-dark: #4a1d63;
-    --brand-red: #dc3545;          /* Red for alerts/important */
+    --brand-red: #dc3545;
     --brand-red-dark: #b02a37;
-    --brand-black: #1a1a1a;         /* Black for text */
+    --brand-black: #1a1a1a;
     --brand-black-light: #333333;
-    --brand-white: #ffffff;          /* White */
-    --brand-gray: #f8f9fa;          /* Light gray background */
+    --brand-white: #ffffff;
+    --brand-gray: #f8f9fa;
     --brand-gray-dark: #6c757d;
 }
 
-/* Global Styles */
+/* ========================================
+   BASE STYLES
+   ======================================== */
+html {
+    font-size: 16px;
+}
+
 body {
+    font-size: 1rem;
+    line-height: 1.6;
     color: var(--brand-black);
     background-color: var(--brand-gray);
 }
 
-/* Navbar - Purple Theme */
+/* ========================================
+   MOBILE RESPONSIVE FIXES
+   ======================================== */
+
+/* Make text larger on small screens */
+@media (max-width: 768px) {
+    html {
+        font-size: 18px;
+    }
+    
+    body {
+        font-size: 1rem;
+    }
+    
+    /* Headings */
+    h1 { font-size: 1.8rem; }
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.3rem; }
+    h4 { font-size: 1.1rem; }
+    h5 { font-size: 1rem; }
+    h6 { font-size: 0.9rem; }
+    
+    /* Cards */
+    .card-body {
+        padding: 1rem;
+    }
+    
+    /* Form inputs - prevents iOS zoom */
+    .form-control,
+    .form-select {
+        font-size: 16px;
+        padding: 0.75rem;
+    }
+    
+    /* Buttons */
+    .btn {
+        font-size: 1rem;
+        padding: 0.6rem 1.2rem;
+    }
+    
+    /* Tables */
+    .table {
+        font-size: 0.85rem;
+    }
+    
+    /* Navigation */
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+    
+    .nav-link {
+        font-size: 1rem;
+        padding: 0.6rem 0.8rem;
+    }
+    
+    /* Profile picture */
+    .profile-picture-wrapper .profile-picture {
+        width: 32px !important;
+        height: 32px !important;
+    }
+    
+    /* Stats cards */
+    .card .display-4,
+    .card h3 {
+        font-size: 1.8rem;
+    }
+    
+    /* List groups */
+    .list-group-item {
+        font-size: 1rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Alerts */
+    .alert {
+        font-size: 0.95rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Small text */
+    .text-muted,
+    small,
+    .small {
+        font-size: 0.85rem !important;
+    }
+}
+
+/* Extra small devices (phones under 480px) */
+@media (max-width: 480px) {
+    html {
+        font-size: 17px;
+    }
+    
+    .container {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+    
+    .card {
+        border-radius: 8px;
+    }
+    
+    .card-header {
+        padding: 0.75rem 1rem;
+        font-size: 1.1rem;
+    }
+}
+
+/* Prevent zoom on input focus (iOS) */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+textarea,
+select,
+.form-control {
+    font-size: 16px !important;
+}
+
+/* ========================================
+   NAVBAR - PURPLE THEME
+   ======================================== */
 .navbar.bg-dark {
     background-color: var(--brand-purple-dark) !important;
 }
@@ -48,7 +180,9 @@ body {
     margin-right: 5px;
 }
 
-/* Buttons - Purple Theme */
+/* ========================================
+   BUTTONS
+   ======================================== */
 .btn-primary {
     background-color: var(--brand-purple);
     border-color: var(--brand-purple);
@@ -83,7 +217,35 @@ body {
     border-color: var(--brand-red-dark);
 }
 
-/* Cards */
+.btn-purple {
+    background-color: var(--brand-purple);
+    border-color: var(--brand-purple);
+    color: var(--brand-white);
+}
+
+.btn-purple:hover,
+.btn-purple:focus,
+.btn-purple:active {
+    background-color: var(--brand-purple-dark) !important;
+    border-color: var(--brand-purple-dark) !important;
+    color: var(--brand-white) !important;
+}
+
+.btn-outline-purple {
+    color: var(--brand-purple);
+    border-color: var(--brand-purple);
+    background-color: transparent;
+}
+
+.btn-outline-purple:hover {
+    background-color: var(--brand-purple);
+    border-color: var(--brand-purple);
+    color: var(--brand-white);
+}
+
+/* ========================================
+   CARDS
+   ======================================== */
 .card {
     border: none;
     box-shadow: 0 2px 4px rgba(111, 44, 145, 0.1);
@@ -112,7 +274,26 @@ body {
     color: var(--brand-white);
 }
 
-/* Profile Picture */
+/* Dashboard Stats Cards */
+.card.bg-primary {
+    background: linear-gradient(135deg, var(--brand-purple) 0%, var(--brand-purple-dark) 100%) !important;
+}
+
+.card.bg-success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
+}
+
+.card.bg-info {
+    background: linear-gradient(135deg, var(--brand-purple-light) 0%, var(--brand-purple) 100%) !important;
+}
+
+.card.bg-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #d39e00 100%) !important;
+}
+
+/* ========================================
+   PROFILE PICTURE
+   ======================================== */
 .profile-picture {
     border: 3px solid var(--brand-white);
     box-shadow: 0 4px 8px rgba(111, 44, 145, 0.2);
@@ -122,7 +303,9 @@ body {
     border-color: var(--brand-purple);
 }
 
-/* Role Badges */
+/* ========================================
+   ROLE & STATUS BADGES
+   ======================================== */
 .role-badge {
     display: inline-block;
     padding: 4px 12px;
@@ -146,7 +329,6 @@ body {
     color: var(--brand-white);
 }
 
-/* Status Badges */
 .status-badge {
     display: inline-block;
     padding: 4px 12px;
@@ -165,7 +347,9 @@ body {
     color: var(--brand-white);
 }
 
-/* Links */
+/* ========================================
+   LINKS
+   ======================================== */
 a {
     color: var(--brand-purple);
     transition: color 0.3s ease;
@@ -175,7 +359,9 @@ a:hover {
     color: var(--brand-purple-dark);
 }
 
-/* Notifications */
+/* ========================================
+   NOTIFICATIONS
+   ======================================== */
 .notification-item.unread {
     background-color: rgba(111, 44, 145, 0.05);
     border-left: 3px solid var(--brand-purple);
@@ -185,7 +371,9 @@ a:hover {
     background-color: var(--brand-red) !important;
 }
 
-/* Alerts */
+/* ========================================
+   ALERTS
+   ======================================== */
 .alert-success {
     background-color: #d4edda;
     border-color: #c3e6cb;
@@ -210,24 +398,9 @@ a:hover {
     color: #0c5460;
 }
 
-/* Dashboard Stats Cards */
-.card.bg-primary {
-    background: linear-gradient(135deg, var(--brand-purple) 0%, var(--brand-purple-dark) 100%) !important;
-}
-
-.card.bg-success {
-    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
-}
-
-.card.bg-info {
-    background: linear-gradient(135deg, var(--brand-purple-light) 0%, var(--brand-purple) 100%) !important;
-}
-
-.card.bg-warning {
-    background: linear-gradient(135deg, #ffc107 0%, #d39e00 100%) !important;
-}
-
-/* Footer */
+/* ========================================
+   FOOTER
+   ======================================== */
 footer {
     background-color: var(--brand-purple-dark) !important;
     color: var(--brand-white);
@@ -243,7 +416,9 @@ footer a:hover {
     opacity: 1;
 }
 
-/* List Group Items */
+/* ========================================
+   LIST GROUP ITEMS
+   ======================================== */
 .list-group-item {
     border-left: 3px solid transparent;
     transition: all 0.3s ease;
@@ -254,7 +429,9 @@ footer a:hover {
     background-color: rgba(111, 44, 145, 0.02);
 }
 
-/* Dropdown Menus */
+/* ========================================
+   DROPDOWN MENUS
+   ======================================== */
 .dropdown-menu {
     border: none;
     box-shadow: 0 4px 12px rgba(111, 44, 145, 0.15);
@@ -270,7 +447,9 @@ footer a:hover {
     color: var(--brand-purple);
 }
 
-/* Modal Headers */
+/* ========================================
+   MODAL HEADERS
+   ======================================== */
 .modal-header {
     background: linear-gradient(135deg, var(--brand-purple) 0%, var(--brand-purple-dark) 100%);
     color: var(--brand-white);
@@ -281,7 +460,9 @@ footer a:hover {
     filter: brightness(0) invert(1);
 }
 
-/* Pagination */
+/* ========================================
+   PAGINATION
+   ======================================== */
 .pagination .page-link {
     color: var(--brand-purple);
     border-color: #dee2e6;
@@ -298,7 +479,9 @@ footer a:hover {
     background-color: rgba(111, 44, 145, 0.1);
 }
 
-/* Form Elements */
+/* ========================================
+   FORM ELEMENTS
+   ======================================== */
 .form-control:focus {
     border-color: var(--brand-purple-light);
     box-shadow: 0 0 0 0.2rem rgba(111, 44, 145, 0.25);
@@ -309,7 +492,9 @@ footer a:hover {
     box-shadow: 0 0 0 0.2rem rgba(111, 44, 145, 0.25);
 }
 
-/* Tables */
+/* ========================================
+   TABLES
+   ======================================== */
 .table thead th {
     border-bottom: 2px solid var(--brand-purple-light);
     color: var(--brand-purple-dark);
@@ -319,58 +504,60 @@ footer a:hover {
     background-color: rgba(111, 44, 145, 0.02);
 }
 
-/* Progress Bars */
+/* ========================================
+   PROGRESS BARS
+   ======================================== */
 .progress-bar {
     background-color: var(--brand-purple);
 }
 
-/* Loading Spinner */
+/* ========================================
+   LOADING SPINNER
+   ======================================== */
 .spinner-border {
     color: var(--brand-purple) !important;
 }
 
-/* Custom Classes for Brand Colors */
-.text-brand-purple {
-    color: var(--brand-purple) !important;
+/* ========================================
+   BRAND LOADER
+   ======================================== */
+.brand-loader {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(111, 44, 145, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--brand-purple);
+    animation: spin 1s ease-in-out infinite;
 }
 
-.text-brand-red {
-    color: var(--brand-red) !important;
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
-.text-brand-black {
-    color: var(--brand-black) !important;
-}
+/* ========================================
+   CUSTOM UTILITY CLASSES
+   ======================================== */
 
-.text-brand-white {
-    color: var(--brand-white) !important;
-}
+/* Text colors */
+.text-brand-purple { color: var(--brand-purple) !important; }
+.text-brand-red { color: var(--brand-red) !important; }
+.text-brand-black { color: var(--brand-black) !important; }
+.text-brand-white { color: var(--brand-white) !important; }
 
-.bg-brand-purple {
-    background-color: var(--brand-purple) !important;
-}
+/* Background colors */
+.bg-brand-purple { background-color: var(--brand-purple) !important; }
+.bg-brand-purple-dark { background-color: var(--brand-purple-dark) !important; }
+.bg-brand-red { background-color: var(--brand-red) !important; }
+.bg-brand-black { background-color: var(--brand-black) !important; }
+.bg-brand-white { background-color: var(--brand-white) !important; }
 
-.bg-brand-purple-dark {
-    background-color: var(--brand-purple-dark) !important;
-}
+/* Border */
+.border-brand-purple { border-color: var(--brand-purple) !important; }
 
-.bg-brand-red {
-    background-color: var(--brand-red) !important;
-}
-
-.bg-brand-black {
-    background-color: var(--brand-black) !important;
-}
-
-.bg-brand-white {
-    background-color: var(--brand-white) !important;
-}
-
-.border-brand-purple {
-    border-color: var(--brand-purple) !important;
-}
-
-/* Hover Effects */
+/* ========================================
+   HOVER EFFECTS
+   ======================================== */
 .hover-purple:hover {
     color: var(--brand-purple) !important;
     transition: color 0.3s ease;
@@ -381,7 +568,9 @@ footer a:hover {
     transition: transform 0.3s ease;
 }
 
-/* Animations */
+/* ========================================
+   ANIMATIONS
+   ======================================== */
 @keyframes pulse-purple {
     0% {
         box-shadow: 0 0 0 0 rgba(111, 44, 145, 0.7);
@@ -397,80 +586,3 @@ footer a:hover {
 .pulse-purple {
     animation: pulse-purple 2s infinite;
 }
-
-
-/* Brand Loader */
-.brand-loader {
-    display: inline-block;
-    width: 50px;
-    height: 50px;
-    border: 3px solid rgba(111, 44, 145, 0.3);
-    border-radius: 50%;
-    border-top-color: var(--brand-purple);
-    animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Button Variations */
-.btn-purple {
-    background-color: var(--brand-purple);
-    border-color: var(--brand-purple);
-    color: var(--brand-white);
-}
-
-.btn-purple:hover,
-.btn-purple:focus,
-.btn-purple:active {
-    background-color: var(--brand-purple-dark) !important;
-    border-color: var(--brand-purple-dark) !important;
-    color: var(--brand-white) !important;
-}
-
-.btn-outline-purple {
-    color: var(--brand-purple);
-    border-color: var(--brand-purple);
-    background-color: transparent;
-}
-
-.btn-outline-purple:hover {
-    background-color: var(--brand-purple);
-    border-color: var(--brand-purple);
-    color: var(--brand-white);
-}
-
-<span class="role-badge {{ member.role }}">
-    {{ member.get_role_display }}
-</span>
-
-<footer class="bg-brand-purple-dark text-white py-4 mt-5">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6">
-                <h5><i class="bi bi-church"></i> UCF System</h5>
-                <p>University Christian Fellowship Church Management System</p>
-            </div>
-            <div class="col-md-3">
-                <h6>Quick Links</h6>
-                <ul class="list-unstyled">
-                    <li><a href="{% url 'dashboard' %}" class="text-white-50">Dashboard</a></li>
-                    <li><a href="{% url 'member_list' %}" class="text-white-50">Members</a></li>
-                    <li><a href="{% url 'calendar' %}" class="text-white-50">Calendar</a></li>
-                </ul>
-            </div>
-            <div class="col-md-3">
-                <h6>Contact</h6>
-                <ul class="list-unstyled">
-                    <li><i class="bi bi-envelope"></i> info@ucf.org</li>
-                    <li><i class="bi bi-telephone"></i> +1 234 567 890</li>
-                </ul>
-            </div>
-        </div>
-        <hr class="bg-white opacity-25">
-        <div class="text-center">
-            <small>&copy; {% now "Y" %} UCF. All rights reserved.</small>
-        </div>
-    </div>
-</footer>
