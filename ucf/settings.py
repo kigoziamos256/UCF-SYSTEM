@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'cloudinary',
     'imagekit',
     'members',
+    'pwa',
 ]
 
 # Media storage – use Cloudinary for user-uploaded files
