@@ -6,7 +6,7 @@ from django.contrib.auth.forms import UserCreationForm
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['title', 'description', 'event_date', 'location', 'department', 'cover_image']  # added cover_image
+        fields = ['title', 'description', 'event_date', 'location', 'department', 'cover_image']
         widgets = {
             'event_date': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
             'title': forms.TextInput(attrs={'class': 'form-control'}),
@@ -18,69 +18,35 @@ class EventForm(forms.ModelForm):
 
 
 class MemberRegistrationForm(forms.ModelForm):
-    username = forms.CharField(max_length=150)
-    email = forms.EmailField()
-    password = forms.CharField(widget=forms.PasswordInput)
-    first_name = forms.CharField(max_length=30, required=False)
-    last_name = forms.CharField(max_length=30, required=False)
+    # Only member-specific fields – no user fields (username, email, password, etc.)
+    # The phone_number field is from the Member model.
     phone_number = forms.CharField(max_length=20, required=False)
 
     class Meta:
         model = Member
-        fields = ['department', 'profile_picture']
-
-    def save(self, commit=True):
-        user = User.objects.create_user(
-            username=self.cleaned_data['username'],
-            email=self.cleaned_data['email'],
-            password=self.cleaned_data['password']
-        )
-        
-        # Set first and last name if provided
-        if self.cleaned_data.get('first_name'):
-            user.first_name = self.cleaned_data['first_name']
-        if self.cleaned_data.get('last_name'):
-            user.last_name = self.cleaned_data['last_name']
-        user.save()
-
-        member = super().save(commit=False)
-        member.user = user
-        member.role = 'member'
-        
-        if self.cleaned_data.get('phone_number'):
-            member.phone_number = self.cleaned_data['phone_number']
-
-        if commit:
-            member.save()
-
-        return member
+        fields = ['department', 'profile_picture', 'phone_number']
+        widgets = {
+            'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+            'department': forms.Select(attrs={'class': 'form-control'}),
+        }
 
 
 class DutyForm(forms.ModelForm):
     class Meta:
         model = Duty
-        fields = [
-            'title',
-            'description',
-            'assigned_to',
-            'duty_date'
-        ]
+        fields = ['title', 'description', 'assigned_to', 'duty_date']
         widgets = {
-            'duty_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control'}),
             'assigned_to': forms.Select(attrs={'class': 'form-control'}),
+            'duty_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
         }
 
 
 class AnnouncementForm(forms.ModelForm):
     class Meta:
         model = Announcement
-        fields = [
-            'title',
-            'message',
-            'department'
-        ]
+        fields = ['title', 'message', 'department']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'message': forms.Textarea(attrs={'class': 'form-control'}),
@@ -106,7 +72,7 @@ class ProfilePictureForm(forms.ModelForm):
             'profile_picture': forms.ClearableFileInput(attrs={
                 'class': 'form-control',
                 'accept': 'image/*',
-                'capture': 'camera'  # enables camera capture on mobile
+                'capture': 'camera'
             }),
         }
 
