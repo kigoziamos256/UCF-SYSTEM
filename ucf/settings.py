@@ -137,10 +137,12 @@ LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = 'login'
 
 # Security settings - CSRF protection for Django Admin
+# Security settings – CSRF and cookies
 CSRF_TRUSTED_ORIGINS = [
     'https://ucf-system.onrender.com',
+    'http://ucf-system.onrender.com',   # fallback (though your site is HTTPS)
 ]
 
-if DEBUG:
-    CSRF_TRUSTED_ORIGINS.append('http://localhost:8000')
-    CSRF_TRUSTED_ORIGINS.append('http://127.0.0.1:8000')
+CSRF_COOKIE_SECURE = True          # send only over HTTPS
+CSRF_COOKIE_HTTPONLY = False       # allow JavaScript to read the cookie (if needed)
+SESSION_COOKIE_SECURE = True       # session cookie only over HTTPS
