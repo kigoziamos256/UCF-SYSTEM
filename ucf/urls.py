@@ -7,6 +7,7 @@ from members import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', include('pwa.urls')),
     path('', views.home, name='home'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('members/', include('members.urls')),
