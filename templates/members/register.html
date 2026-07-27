@@ -12,50 +12,74 @@
                     <h4 class="mb-0">Church Member Registration</h4>
                 </div>
                 <div class="card-body">
+                    <!-- Display non-field errors -->
+                    {% if user_form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ user_form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    {% if member_form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ member_form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         
                         <div class="row">
+                            <!-- Username -->
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Username</label>
+                                <label class="form-label">Username *</label>
                                 {{ user_form.username }}
                                 {% if user_form.username.errors %}
                                     <div class="text-danger small">{{ user_form.username.errors }}</div>
                                 {% endif %}
                             </div>
                             
+                            <!-- Email -->
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Email</label>
+                                <label class="form-label">Email *</label>
                                 {{ user_form.email }}
                                 {% if user_form.email.errors %}
                                     <div class="text-danger small">{{ user_form.email.errors }}</div>
                                 {% endif %}
                             </div>
                             
+                            <!-- First Name -->
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Password</label>
+                                <label class="form-label">First Name</label>
+                                {{ user_form.first_name }}
+                                {% if user_form.first_name.errors %}
+                                    <div class="text-danger small">{{ user_form.first_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Last Name -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name</label>
+                                {{ user_form.last_name }}
+                                {% if user_form.last_name.errors %}
+                                    <div class="text-danger small">{{ user_form.last_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Password -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Password *</label>
                                 {{ user_form.password1 }}
                                 {% if user_form.password1.errors %}
                                     <div class="text-danger small">{{ user_form.password1.errors }}</div>
                                 {% endif %}
                             </div>
                             
+                            <!-- Confirm Password -->
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Confirm Password</label>
+                                <label class="form-label">Confirm Password *</label>
                                 {{ user_form.password2 }}
                                 {% if user_form.password2.errors %}
                                     <div class="text-danger small">{{ user_form.password2.errors }}</div>
                                 {% endif %}
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">First Name</label>
-                                <input type="text" name="first_name" class="form-control">
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Last Name</label>
-                                <input type="text" name="last_name" class="form-control">
                             </div>
                         </div>
                         
@@ -64,23 +88,35 @@
                         <h5>Member Profile</h5>
                         
                         <div class="row">
+                            <!-- Department -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Department</label>
                                 {{ member_form.department }}
+                                {% if member_form.department.errors %}
+                                    <div class="text-danger small">{{ member_form.department.errors }}</div>
+                                {% endif %}
                             </div>
                             
+                            <!-- Phone Number -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Phone Number</label>
-                                <input type="text" name="phone_number" class="form-control" placeholder="Optional">
+                                {{ member_form.phone_number }}
+                                {% if member_form.phone_number.errors %}
+                                    <div class="text-danger small">{{ member_form.phone_number.errors }}</div>
+                                {% endif %}
                             </div>
                             
+                            <!-- Profile Picture -->
                             <div class="col-12 mb-3">
                                 <label class="form-label">Profile Picture</label>
                                 {{ member_form.profile_picture }}
                                 <div class="form-text">Optional. Upload a profile picture (JPG, PNG, GIF)</div>
+                                {% if member_form.profile_picture.errors %}
+                                    <div class="text-danger small">{{ member_form.profile_picture.errors }}</div>
+                                {% endif %}
                             </div>
                             
-                            <!-- Profile Picture Preview -->
+                            <!-- Preview -->
                             <div class="col-12 mb-3 text-center" id="previewContainer" style="display: none;">
                                 <img id="preview" src="#" alt="Profile Preview" style="max-width: 150px; max-height: 150px; border-radius: 50%;">
                             </div>
