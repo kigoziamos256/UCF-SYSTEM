@@ -1,12 +1,11 @@
-# members/migrations/0006_add_cover_image.py
-
 from django.db import migrations
 import imagekit.models.fields
+from imagekit.processors import ResizeToFill   # ← add this import
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('members', '0005_alter_announcement_options_alter_duty_options_and_more'),  # ← REPLACE with your actual last migration name
+        ('members', '0005_alter_announcement_options_alter_duty_options_and_more'),   # ← REPLACE with the actual last migration name
     ]
 
     operations = [
