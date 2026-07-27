@@ -8,23 +8,29 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from .models import Member, Department, Event, Duty, Announcement, Notification
 from .forms import (
-    EventForm, MemberRegistrationForm, DutyForm, AnnouncementForm, 
+    EventForm, MemberRegistrationForm, DutyForm, AnnouncementForm,
     DepartmentForm, ProfilePictureForm, UserRegisterForm
 )
 
+
+# -------------------------
+# DECORATORS
+# -------------------------
+
 def admin_required(view_func):
     def wrapper(request, *args, **kwargs):
-        if request.user.is_authenticated and request.user.member.role == "admin":
+        if request.user.is_authenticated and hasattr(request.user, 'member') and request.user.member.role == "admin":
             return view_func(request, *args, **kwargs)
         raise PermissionDenied
     return wrapper
 
 def leader_required(view_func):
     def wrapper(request, *args, **kwargs):
-        if request.user.is_authenticated and request.user.member.role in ["admin", "leader"]:
+        if request.user.is_authenticated and hasattr(request.user, 'member') and request.user.member.role in ["admin", "leader"]:
             return view_func(request, *args, **kwargs)
         raise PermissionDenied
     return wrapper
+
 
 # -------------------------
 # HOME
@@ -33,22 +39,34 @@ def leader_required(view_func):
 def home(request):
     return render(request, "home.html")
 
+
 # -------------------------
-# MEMBER MANAGEMENT
+# TEMPORARY ADMIN CREATORS
 # -------------------------
 
 def make_admin(request):
-    from django.contrib.auth.models import User
-    from django.shortcuts import redirect
-    from django.contrib import messages
-    
+    """Temporary view – visit /members/make-admin/ to create a superuser."""
     if User.objects.filter(is_superuser=True).exists():
         messages.info(request, "Superuser already exists.")
     else:
         User.objects.create_superuser('admin', 'admin@church.com', 'admin123')
         messages.success(request, "Superuser created! Username: admin, Password: admin123")
-    
     return redirect('/admin/')
+
+
+def create_superuser_temp(request):
+    """Alternative temporary view – visit /members/create-superuser/."""
+    if User.objects.filter(is_superuser=True).exists():
+        messages.info(request, "Superuser already exists.")
+    else:
+        User.objects.create_superuser('admin', 'admin@church.com', 'admin123')
+        messages.success(request, "Superuser created! You can now log in at /admin")
+    return redirect('home')
+
+
+# -------------------------
+# MEMBER MANAGEMENT
+# -------------------------
 
 @login_required
 @admin_required
@@ -56,22 +74,22 @@ def manage_members(request):
     members = Member.objects.all()
     return render(request, "members/manage_members.html", {"members": members})
 
+
 def register_member(request):
     if request.method == "POST":
         user_form = UserRegisterForm(request.POST)
         member_form = MemberRegistrationForm(request.POST, request.FILES)
 
         if user_form.is_valid() and member_form.is_valid():
-            # Save user – this triggers post_save signal which creates a Member
+            # Save user (this triggers post_save signal to create a Member)
             user = user_form.save()
-            
-            # Get the automatically created Member and update its fields
+
+            # Update the automatically created Member with extra fields
             member = user.member
             member.department = member_form.cleaned_data.get('department')
             if member_form.cleaned_data.get('profile_picture'):
                 member.profile_picture = member_form.cleaned_data['profile_picture']
-            # If phone_number is in the form, update it
-            if 'phone_number' in member_form.cleaned_data:
+            if member_form.cleaned_data.get('phone_number'):
                 member.phone_number = member_form.cleaned_data['phone_number']
             member.save()
 
@@ -94,11 +112,12 @@ def register_member(request):
         "member_form": member_form
     })
 
+
 @login_required
 def member_list(request):
     query = request.GET.get("q")
     members = Member.objects.select_related("user", "department").all()
-    
+
     if query:
         members = members.filter(
             Q(user__username__icontains=query) |
@@ -106,32 +125,31 @@ def member_list(request):
             Q(user__last_name__icontains=query) |
             Q(department__name__icontains=query)
         )
-    
+
     return render(request, "members/member_list.html", {"members": members})
+
 
 @login_required
 def member_detail(request, id):
     member = get_object_or_404(
-        Member.objects.select_related("user", "department"), 
+        Member.objects.select_related("user", "department"),
         id=id
     )
-    
-    # Get upcoming events for this member
+
     upcoming_events = Event.objects.filter(
         attendees=member.user,
         event_date__gte=timezone.now()
     ).order_by("event_date")[:5]
-    
-    # Get duties for this member
+
     duties = Duty.objects.filter(assigned_to=member.user).order_by("duty_date")[:5]
-    
+
     context = {
         "member": member,
         "upcoming_events": upcoming_events,
         "duties": duties,
     }
-    
     return render(request, "members/member_detail.html", context)
+
 
 # -------------------------
 # DASHBOARD
@@ -143,7 +161,6 @@ def dashboard_view(request):
     member = user.member
     notifications = member.notifications.filter(is_read=False).order_by('-created_at')
 
-    # Get upcoming events based on role
     if member.role == "admin":
         upcoming_events = Event.objects.filter(
             event_date__gte=timezone.now()
@@ -158,13 +175,11 @@ def dashboard_view(request):
             event_date__gte=timezone.now()
         ).order_by("event_date")[:5]
 
-    # Get pending duties
     pending_duties = Duty.objects.filter(
         assigned_to=user,
         completed=False
     ).order_by("duty_date")[:5]
 
-    # Get recent announcements
     if member.role == "admin":
         announcements = Announcement.objects.all().order_by("-date_posted")[:5]
     elif member.role == "leader" and member.department:
@@ -184,8 +199,8 @@ def dashboard_view(request):
         "total_duties": Duty.objects.count(),
         "notifications": notifications,
     }
-
     return render(request, "dashboard.html", context)
+
 
 # -------------------------
 # EVENTS
@@ -195,13 +210,12 @@ def dashboard_view(request):
 @admin_required
 def create_event(request):
     if request.method == "POST":
-        form = EventForm(request.POST)
+        form = EventForm(request.POST, request.FILES)  # include files for cover_image
         if form.is_valid():
             event = form.save(commit=False)
             event.created_by = request.user
             event.save()
-            
-            # Notify all members
+
             for member in Member.objects.all():
                 Notification.objects.create(
                     recipient=member,
@@ -210,7 +224,7 @@ def create_event(request):
                     message=f"New event '{event.title}' has been scheduled for {event.event_date.strftime('%B %d, %Y at %I:%M %p')}.",
                     event=event
                 )
-            
+
             messages.success(request, f"Event '{event.title}' created and all members notified!")
             return redirect('calendar')
     else:
@@ -218,15 +232,17 @@ def create_event(request):
 
     return render(request, 'members/create_event.html', {'form': form})
 
+
 @login_required
 def calendar_view(request):
     events = Event.objects.filter(event_date__gte=timezone.now()).order_by("event_date")
     return render(request, "calendar.html", {"upcoming_events": events})
 
+
 @login_required
 def event_detail_view(request, event_id):
     event = get_object_or_404(Event, id=event_id)
-    
+
     if request.method == "POST":
         if 'join' in request.POST:
             if request.user not in event.attendees.all():
@@ -237,8 +253,9 @@ def event_detail_view(request, event_id):
                 event.attendees.remove(request.user)
                 messages.success(request, "You have left the event!")
         return redirect('event_detail', event_id=event.id)
-    
+
     return render(request, "event_detail.html", {"event": event})
+
 
 # -------------------------
 # DUTIES
@@ -253,8 +270,7 @@ def assign_duty(request):
             duty = form.save(commit=False)
             duty.created_by = request.user
             duty.save()
-            
-            # Notify assigned member
+
             try:
                 recipient = Member.objects.get(user=duty.assigned_to)
                 Notification.objects.create(
@@ -267,17 +283,19 @@ def assign_duty(request):
                 messages.success(request, f"Duty assigned to {duty.assigned_to.get_full_name() or duty.assigned_to.username}!")
             except Member.DoesNotExist:
                 messages.warning(request, "Duty assigned but notification could not be sent.")
-            
+
             return redirect('dashboard')
     else:
         form = DutyForm()
-    
+
     return render(request, 'members/assign_duty.html', {'form': form})
+
 
 @login_required
 def duty_detail_view(request, duty_id):
     duty = get_object_or_404(Duty, id=duty_id)
     return render(request, "duty_detail.html", {"duty": duty})
+
 
 # -------------------------
 # ANNOUNCEMENTS
@@ -288,6 +306,7 @@ def announcements_list(request):
     announcements = Announcement.objects.all().order_by("-date_posted")
     return render(request, "announcements.html", {"announcements": announcements})
 
+
 @login_required
 @leader_required
 def create_announcement(request):
@@ -297,13 +316,12 @@ def create_announcement(request):
             announcement = form.save(commit=False)
             announcement.created_by = request.user
             announcement.save()
-            
-            # Notify members
+
             if announcement.department:
                 members = Member.objects.filter(department=announcement.department)
             else:
                 members = Member.objects.all()
-            
+
             for member in members:
                 Notification.objects.create(
                     recipient=member,
@@ -312,18 +330,20 @@ def create_announcement(request):
                     message=f"New announcement: '{announcement.title}'",
                     announcement=announcement
                 )
-            
+
             messages.success(request, f"Announcement '{announcement.title}' posted!")
             return redirect('dashboard')
     else:
         form = AnnouncementForm()
-    
+
     return render(request, 'members/create_announcement.html', {'form': form})
+
 
 @login_required
 def announcement_detail_view(request, announcement_id):
     announcement = get_object_or_404(Announcement, id=announcement_id)
     return render(request, "announcement_detail.html", {"announcement": announcement})
+
 
 # -------------------------
 # DEPARTMENTS
@@ -340,14 +360,16 @@ def create_department(request):
             return redirect('department_list')
     else:
         form = DepartmentForm()
-    
+
     return render(request, 'members/create_department.html', {'form': form})
+
 
 @login_required
 @admin_required
 def department_list(request):
     departments = Department.objects.all()
     return render(request, 'members/department_list.html', {'departments': departments})
+
 
 # -------------------------
 # PROFILE
@@ -356,18 +378,16 @@ def department_list(request):
 @login_required
 def profile_view(request):
     member = request.user.member
-    
-    # Get user stats
+
     events_attended = request.user.events_joined.count()
     duties_completed = Duty.objects.filter(assigned_to=request.user, completed=True).count()
     announcements_count = Announcement.objects.filter(created_by=request.user).count()
-    
-    # Get upcoming events and duties
+
     upcoming_events = Event.objects.filter(
         attendees=request.user,
         event_date__gte=timezone.now()
     ).order_by("event_date")[:5]
-    
+
     pending_duties = Duty.objects.filter(
         assigned_to=request.user,
         completed=False
@@ -381,13 +401,12 @@ def profile_view(request):
             return redirect('profile')
     else:
         form = ProfilePictureForm(instance=member)
-    
-    # Get notifications
+
     notifications = Notification.objects.filter(
-        recipient=member, 
+        recipient=member,
         is_read=False
     ).order_by('-created_at')
-    
+
     context = {
         'member': member,
         'form': form,
@@ -398,24 +417,8 @@ def profile_view(request):
         'upcoming_events': upcoming_events,
         'pending_duties': pending_duties,
     }
-    
     return render(request, 'profile.html', context)
-def create_superuser_temp(request):
-    from django.contrib.auth.models import User
-    from django.contrib import messages
-    
-    # Check if superuser already exists
-    if User.objects.filter(is_superuser=True).exists():
-        return render(request, "home.html", {"error": "Superuser already exists"})
-    
-    # Create superuser
-    User.objects.create_superuser(
-        username='admin',
-        email='admin@church.com',
-        password='admin123'
-    )
-    messages.success(request, "Superuser created! You can now log in at /admin")
-    return redirect('home')
+
 
 @login_required
 def mark_notification_read(request, notification_id):
