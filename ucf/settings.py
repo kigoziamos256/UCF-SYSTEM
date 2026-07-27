@@ -146,3 +146,44 @@ CSRF_TRUSTED_ORIGINS = [
 CSRF_COOKIE_SECURE = True          # send only over HTTPS
 CSRF_COOKIE_HTTPONLY = False       # allow JavaScript to read the cookie (if needed)
 SESSION_COOKIE_SECURE = True       # session cookie only over HTTPS
+
+
+# ========== PWA CONFIGURATION ==========
+PWA_APP_NAME = 'UCF Church'
+PWA_APP_DESCRIPTION = "University Christian Fellowship Church Management"
+PWA_APP_THEME_COLOR = '#6f2c91'  # Your brand purple
+PWA_APP_BACKGROUND_COLOR = '#ffffff'
+PWA_APP_DISPLAY = 'standalone'
+PWA_APP_START_URL = '/dashboard/'
+PWA_APP_ORIENTATION = 'any'
+
+PWA_APP_ICONS = [
+    {
+        'src': '/static/icons/icon-192x192.png',
+        'sizes': '192x192',
+        'type': 'image/png',
+    },
+    {
+        'src': '/static/icons/icon-512x512.png',
+        'sizes': '512x512',
+        'type': 'image/png',
+    }
+]
+
+PWA_APP_ICONS_APPLE = [
+    {
+        'src': '/static/icons/icon-192x192.png',
+        'sizes': '192x192',
+        'type': 'image/png',
+    }
+]
+
+PWA_APP_SPLASH_SCREEN = [
+    {
+        'src': '/static/icons/icon-512x512.png',
+        'media': '(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)',
+    }
+]
+
+PWA_APP_DIR = 'ltr'
+PWA_APP_LANG = 'en'
