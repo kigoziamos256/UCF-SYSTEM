@@ -5,6 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.contrib.auth import logout
+from django.shortcuts import redirect
 from django.contrib import messages
 from .models import Member, Department, Event, Duty, Announcement, Notification
 from .forms import (
@@ -23,6 +25,11 @@ def admin_required(view_func):
             return view_func(request, *args, **kwargs)
         raise PermissionDenied
     return wrapper
+    
+def custom_logout(request):
+    logout(request)
+    messages.success(request, "You have been logged out successfully.")
+    return redirect('login')
 
 def leader_required(view_func):
     def wrapper(request, *args, **kwargs):
