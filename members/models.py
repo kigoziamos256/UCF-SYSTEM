@@ -7,35 +7,16 @@ from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
 
 
+# ==================== DEPARTMENT ====================
 class Department(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
 
     def __str__(self):
         return self.name
-class Attendance(models.Model):
-    STATUS_CHOICES = (
-        ('present', 'Present'),
-        ('absent', 'Absent'),
-        ('excused', 'Excused'),
-        ('late', 'Late'),
-    )
-    
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='attendance_records')
-    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='attendance_records')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='present')
-    check_in_time = models.DateTimeField(default=timezone.now)
-    checked_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='attendance_checked')
-    notes = models.TextField(blank=True, null=True)
-    
-    class Meta:
-        unique_together = ['event', 'member']  # Each member can only have one attendance per event
-        ordering = ['-check_in_time']
-    
-    def __str__(self):
-        return f"{self.member.user.username} - {self.event.title} - {self.status}"
 
 
+# ==================== MEMBER ====================
 class Member(models.Model):
     ROLE_CHOICES = (
         ('admin', 'Admin'),
@@ -47,21 +28,17 @@ class Member(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='member')
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='members')
     role = models.CharField(max_length=50, choices=ROLE_CHOICES, default='member')
-    
-    # Single profile picture field with ImageKit processing
+
     profile_picture = ProcessedImageField(
         upload_to='profile_pics/',
-        processors=[ResizeToFill(300, 300)],  # crops to 300x300 square
+        processors=[ResizeToFill(300, 300)],
         format='JPEG',
         options={'quality': 90},
         null=True,
         blank=True
     )
-    
-    # Track when profile picture was last updated
+
     profile_picture_updated_at = models.DateTimeField(null=True, blank=True)
-    
-    # Additional profile fields you might want
     phone_number = models.CharField(max_length=20, blank=True)
     address = models.TextField(blank=True)
     date_joined = models.DateTimeField(default=timezone.now)
@@ -74,16 +51,12 @@ class Member(models.Model):
         return self.user.get_full_name() or self.user.username
 
     def get_profile_picture_url(self):
-        """Returns profile picture URL or default avatar with initials"""
         if self.profile_picture and hasattr(self.profile_picture, 'url') and self.profile_picture.name:
             return self.profile_picture.url
-        
-        # Generate avatar with initials using UI Avatars service
         initials = self.get_initials()
         return f"https://ui-avatars.com/api/?name={initials}&size=300&background=random&color=fff&length=2&font-size=0.5"
-    
+
     def get_initials(self):
-        """Get user initials for avatar"""
         full_name = self.user.get_full_name()
         if full_name:
             name_parts = full_name.split()
@@ -91,11 +64,10 @@ class Member(models.Model):
                 return f"{name_parts[0][0]}{name_parts[-1][0]}".upper()
             return name_parts[0][:2].upper()
         else:
-            # Use username if no full name
-            username = self.user.username
-            return username[:2].upper()
+            return self.user.username[:2].upper()
 
 
+# ==================== EVENT ====================
 class Event(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
@@ -106,27 +78,51 @@ class Event(models.Model):
     attendees = models.ManyToManyField(User, blank=True, related_name="events_joined")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    # 👇 New cover_image field
+
     cover_image = ProcessedImageField(
         upload_to='event_covers/',
-        processors=[ResizeToFill(800, 400)],  # crops to 800x400
+        processors=[ResizeToFill(800, 400)],
         format='JPEG',
         options={'quality': 85},
         null=True,
         blank=True
     )
-    
+
     class Meta:
         ordering = ['event_date']
 
     def __str__(self):
         return self.title
-    
+
     def get_attendee_count(self):
         return self.attendees.count()
 
 
+# ==================== ATTENDANCE (now after Event and Member) ====================
+class Attendance(models.Model):
+    STATUS_CHOICES = (
+        ('present', 'Present'),
+        ('absent', 'Absent'),
+        ('excused', 'Excused'),
+        ('late', 'Late'),
+    )
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='attendance_records')
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='attendance_records')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='present')
+    check_in_time = models.DateTimeField(default=timezone.now)
+    checked_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='attendance_checked')
+    notes = models.TextField(blank=True, null=True)
+
+    class Meta:
+        unique_together = ['event', 'member']
+        ordering = ['-check_in_time']
+
+    def __str__(self):
+        return f"{self.member.user.username} - {self.event.title} - {self.status}"
+
+
+# ==================== DUTY ====================
 class Duty(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
@@ -137,20 +133,21 @@ class Duty(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="duties_created")
-    
+
     class Meta:
         ordering = ['duty_date', 'title']
         verbose_name_plural = "Duties"
 
     def __str__(self):
         return self.title
-    
+
     def mark_completed(self):
         self.completed = True
         self.completed_at = timezone.now()
         self.save()
 
 
+# ==================== ANNOUNCEMENT ====================
 class Announcement(models.Model):
     title = models.CharField(max_length=200)
     message = models.TextField()
@@ -160,19 +157,20 @@ class Announcement(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="announcements")
     is_important = models.BooleanField(default=False)
     expires_at = models.DateTimeField(null=True, blank=True)
-    
+
     class Meta:
         ordering = ['-date_posted']
 
     def __str__(self):
         return self.title
-    
+
     def is_expired(self):
         if self.expires_at:
             return timezone.now() > self.expires_at
         return False
 
 
+# ==================== NOTIFICATION ====================
 class Notification(models.Model):
     NOTIFICATION_TYPES = (
         ('event', 'Event'),
@@ -180,7 +178,7 @@ class Notification(models.Model):
         ('announcement', 'Announcement'),
         ('general', 'General'),
     )
-    
+
     recipient = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='notifications')
     notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES, default='general')
     title = models.CharField(max_length=200, blank=True)
@@ -188,25 +186,25 @@ class Notification(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     is_read = models.BooleanField(default=False)
     read_at = models.DateTimeField(null=True, blank=True)
-    
-    # Optional link to related object
+
     event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True, blank=True)
     duty = models.ForeignKey(Duty, on_delete=models.SET_NULL, null=True, blank=True)
     announcement = models.ForeignKey(Announcement, on_delete=models.SET_NULL, null=True, blank=True)
-    
+
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
         return f"Notification for {self.recipient.user.username}: {self.message[:50]}"
-    
+
     def mark_as_read(self):
         self.is_read = True
         self.read_at = timezone.now()
         self.save()
 
 
-# Signal to automatically create Member profile when User is created
+# ==================== SIGNALS ====================
+
 @receiver(post_save, sender=User)
 def create_member_profile(sender, instance, created, **kwargs):
     if created:
@@ -215,14 +213,12 @@ def create_member_profile(sender, instance, created, **kwargs):
         Member.objects.get_or_create(user=instance)
 
 
-# Signal to save Member when User is saved
 @receiver(post_save, sender=User)
 def save_member_profile(sender, instance, **kwargs):
     if hasattr(instance, 'member'):
         instance.member.save()
 
 
-# Signal to update profile_picture_updated_at when profile picture changes
 @receiver(post_save, sender=Member)
 def update_profile_picture_timestamp(sender, instance, **kwargs):
     if instance.profile_picture and not instance.profile_picture_updated_at:
@@ -230,7 +226,6 @@ def update_profile_picture_timestamp(sender, instance, **kwargs):
         Member.objects.filter(pk=instance.pk).update(profile_picture_updated_at=timezone.now())
 
 
-# Signal to create notification for new events
 @receiver(post_save, sender=Event)
 def notify_new_event(sender, instance, created, **kwargs):
     if created:
@@ -238,7 +233,7 @@ def notify_new_event(sender, instance, created, **kwargs):
             recipients = Member.objects.filter(department=instance.department, is_active=True)
         else:
             recipients = Member.objects.filter(is_active=True)
-        
+
         for recipient in recipients:
             Notification.objects.create(
                 recipient=recipient,
@@ -249,7 +244,6 @@ def notify_new_event(sender, instance, created, **kwargs):
             )
 
 
-# Signal to create notification for new duties
 @receiver(post_save, sender=Duty)
 def notify_new_duty(sender, instance, created, **kwargs):
     if created:
@@ -266,7 +260,6 @@ def notify_new_duty(sender, instance, created, **kwargs):
             pass
 
 
-# Signal to create notification for new announcements
 @receiver(post_save, sender=Announcement)
 def notify_new_announcement(sender, instance, created, **kwargs):
     if created:
@@ -274,7 +267,7 @@ def notify_new_announcement(sender, instance, created, **kwargs):
             recipients = Member.objects.filter(department=instance.department, is_active=True)
         else:
             recipients = Member.objects.filter(is_active=True)
-        
+
         for recipient in recipients:
             Notification.objects.create(
                 recipient=recipient,
@@ -285,13 +278,12 @@ def notify_new_announcement(sender, instance, created, **kwargs):
             )
 
 
-# Signal to mark duty as completed
 @receiver(post_save, sender=Duty)
 def check_duty_completion(sender, instance, **kwargs):
     if instance.completed and not instance.completed_at:
         instance.completed_at = timezone.now()
         Duty.objects.filter(pk=instance.pk).update(completed_at=timezone.now())
-        
+
         try:
             if instance.created_by:
                 recipient = Member.objects.get(user=instance.created_by)
