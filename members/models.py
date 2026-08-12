@@ -13,6 +13,27 @@ class Department(models.Model):
 
     def __str__(self):
         return self.name
+class Attendance(models.Model):
+    STATUS_CHOICES = (
+        ('present', 'Present'),
+        ('absent', 'Absent'),
+        ('excused', 'Excused'),
+        ('late', 'Late'),
+    )
+    
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='attendance_records')
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='attendance_records')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='present')
+    check_in_time = models.DateTimeField(default=timezone.now)
+    checked_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='attendance_checked')
+    notes = models.TextField(blank=True, null=True)
+    
+    class Meta:
+        unique_together = ['event', 'member']  # Each member can only have one attendance per event
+        ordering = ['-check_in_time']
+    
+    def __str__(self):
+        return f"{self.member.user.username} - {self.event.title} - {self.status}"
 
 
 class Member(models.Model):
