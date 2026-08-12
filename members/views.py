@@ -1,17 +1,16 @@
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.utils import timezone
 from django.contrib.auth.models import User
-from django.contrib.auth import logout
-from django.shortcuts import redirect
 from django.contrib import messages
+
 from .models import Event, Member, Duty, Announcement, Notification, Attendance
 from .forms import (
     EventForm, MemberRegistrationForm, DutyForm, AnnouncementForm,
-    DepartmentForm, ProfilePictureForm, UserRegisterForm, AttendaceForm
+    DepartmentForm, ProfilePictureForm, UserRegisterForm, AttendanceForm  # ✅ Fixed typo here
 )
 
 
@@ -25,11 +24,6 @@ def admin_required(view_func):
             return view_func(request, *args, **kwargs)
         raise PermissionDenied
     return wrapper
-    
-def custom_logout(request):
-    logout(request)
-    messages.success(request, "You have been logged out successfully.")
-    return redirect('login')
 
 def leader_required(view_func):
     def wrapper(request, *args, **kwargs):
@@ -37,6 +31,16 @@ def leader_required(view_func):
             return view_func(request, *args, **kwargs)
         raise PermissionDenied
     return wrapper
+
+
+# -------------------------
+# LOGOUT
+# -------------------------
+
+def custom_logout(request):
+    logout(request)
+    messages.success(request, "You have been logged out successfully.")
+    return redirect('login')
 
 
 # -------------------------
@@ -88,10 +92,7 @@ def register_member(request):
         member_form = MemberRegistrationForm(request.POST, request.FILES)
 
         if user_form.is_valid() and member_form.is_valid():
-            # Save user (this triggers post_save signal to create a Member)
             user = user_form.save()
-
-            # Update the automatically created Member with extra fields
             member = user.member
             member.department = member_form.cleaned_data.get('department')
             if member_form.cleaned_data.get('profile_picture'):
@@ -100,12 +101,10 @@ def register_member(request):
                 member.phone_number = member_form.cleaned_data['phone_number']
             member.save()
 
-            # Auto-login after registration
             login(request, user)
             messages.success(request, "Registration successful! Welcome.")
             return redirect('dashboard')
         else:
-            # Form invalid – redisplay with errors
             return render(request, "members/register.html", {
                 "user_form": user_form,
                 "member_form": member_form
@@ -167,13 +166,9 @@ def member_detail(request, id):
 def finance_dashboard(request):
     """Admin view for finance department"""
     finance_staff = Member.objects.filter(role='finance').select_related('user', 'department')
-    
-    # Get all members for reference
-    all_members = Member.objects.all().count()
-    
-    # Get total events (for context)
+    all_members = Member.objects.count()
     total_events = Event.objects.count()
-    
+
     context = {
         'finance_staff': finance_staff,
         'all_members': all_members,
@@ -181,6 +176,7 @@ def finance_dashboard(request):
         'section': 'finance'
     }
     return render(request, 'admin/finance_dashboard.html', context)
+
 
 @login_required
 def dashboard_view(request):
@@ -215,10 +211,12 @@ def dashboard_view(request):
         ).order_by("-date_posted")[:5]
     else:
         announcements = Announcement.objects.all().order_by("-date_posted")[:5]
+
+    # Attendance stats
     attendance_present = Attendance.objects.filter(member=member, status='present').count()
     attendance_late = Attendance.objects.filter(member=member, status='late').count()
     attendance_absent = Attendance.objects.filter(member=member, status='absent').count()
-    
+
     context = {
         "user": user,
         "upcoming_events": upcoming_events,
@@ -228,9 +226,9 @@ def dashboard_view(request):
         "total_events": Event.objects.count(),
         "total_duties": Duty.objects.count(),
         "notifications": notifications,
-        'attendance_present': attendance_present,
-        'attendance_late': attendance_late,
-        'attendance_absent': attendance_absent,
+        "attendance_present": attendance_present,
+        "attendance_late": attendance_late,
+        "attendance_absent": attendance_absent,
     }
     return render(request, "dashboard.html", context)
 
@@ -243,7 +241,7 @@ def dashboard_view(request):
 @admin_required
 def create_event(request):
     if request.method == "POST":
-        form = EventForm(request.POST, request.FILES)  # include files for cover_image
+        form = EventForm(request.POST, request.FILES)
         if form.is_valid():
             event = form.save(commit=False)
             event.created_by = request.user
@@ -276,15 +274,14 @@ def calendar_view(request):
 def event_detail_view(request, event_id):
     event = get_object_or_404(Event, id=event_id)
     user_member = request.user.member
-    
+
     # Check if user has already marked attendance
     attendance = None
-    if request.user.is_authenticated:
-        try:
-            attendance = Attendance.objects.get(event=event, member=user_member)
-        except Attendance.DoesNotExist:
-            pass
-    
+    try:
+        attendance = Attendance.objects.get(event=event, member=user_member)
+    except Attendance.DoesNotExist:
+        pass
+
     if request.method == "POST":
         if 'join' in request.POST:
             if request.user not in event.attendees.all():
@@ -305,8 +302,7 @@ def event_detail_view(request, event_id):
                 messages.success(request, f"Attendance marked as {attendance.get_status_display()}!")
                 return redirect('event_detail', event_id=event.id)
         return redirect('event_detail', event_id=event.id)
-    
-    # Get attendance stats for this event
+
     attendance_stats = {
         'present': Attendance.objects.filter(event=event, status='present').count(),
         'absent': Attendance.objects.filter(event=event, status='absent').count(),
@@ -314,7 +310,7 @@ def event_detail_view(request, event_id):
         'late': Attendance.objects.filter(event=event, status='late').count(),
         'total': Attendance.objects.filter(event=event).count(),
     }
-    
+
     context = {
         'event': event,
         'attendance': attendance,
