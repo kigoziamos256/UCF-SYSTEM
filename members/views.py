@@ -80,6 +80,17 @@ def create_superuser_temp(request):
 # -------------------------
 
 @login_required
+def promote_to_admin(request):
+    if request.user.is_superuser:
+        member = request.user.member
+        member.role = 'admin'
+        member.save()
+        messages.success(request, "Your member role has been updated to Admin!")
+    else:
+        messages.error(request, "You need to be a superuser to do this.")
+    return redirect('dashboard')
+
+@login_required
 @admin_required
 def manage_members(request):
     members = Member.objects.all()
