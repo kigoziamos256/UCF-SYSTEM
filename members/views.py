@@ -8,10 +8,10 @@ from django.contrib.auth.models import User
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.contrib import messages
-from .models import Member, Department, Event, Duty, Announcement, Notification
+from .models import Event, Member, Duty, Announcement, Notification, Attendance
 from .forms import (
     EventForm, MemberRegistrationForm, DutyForm, AnnouncementForm,
-    DepartmentForm, ProfilePictureForm, UserRegisterForm
+    DepartmentForm, ProfilePictureForm, UserRegisterForm, AttendaceForm
 )
 
 
