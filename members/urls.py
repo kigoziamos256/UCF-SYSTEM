@@ -34,6 +34,7 @@ urlpatterns = [
 
     path('create-superuser/', views.create_superuser_temp, name='create_superuser'),
     
+    path('finance/', views.finance_dashboard, name='finance_dashboard'),
     # 👇 ADD THIS LINE - Temporary admin creator
     path('make-admin/', views.make_admin, name='make_admin'),
 ]
