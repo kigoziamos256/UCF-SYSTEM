@@ -36,6 +36,14 @@ class MemberRegistrationForm(forms.ModelForm):
             'department': forms.Select(attrs={'class': 'form-control'}),
         }
 
+class AttendanceForm(forms.ModelForm):
+    class Meta:
+        model = Attendance
+        fields = ['status', 'notes']
+        widgets = {
+            'status': forms.Select(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
 
 class DutyForm(forms.ModelForm):
     class Meta:
