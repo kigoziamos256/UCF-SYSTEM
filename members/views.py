@@ -215,7 +215,10 @@ def dashboard_view(request):
         ).order_by("-date_posted")[:5]
     else:
         announcements = Announcement.objects.all().order_by("-date_posted")[:5]
-
+    attendance_present = Attendance.objects.filter(member=member, status='present').count()
+    attendance_late = Attendance.objects.filter(member=member, status='late').count()
+    attendance_absent = Attendance.objects.filter(member=member, status='absent').count()
+    
     context = {
         "user": user,
         "upcoming_events": upcoming_events,
@@ -225,6 +228,9 @@ def dashboard_view(request):
         "total_events": Event.objects.count(),
         "total_duties": Duty.objects.count(),
         "notifications": notifications,
+        'attendance_present': attendance_present,
+        'attendance_late': attendance_late,
+        'attendance_absent': attendance_absent,
     }
     return render(request, "dashboard.html", context)
 
