@@ -163,6 +163,26 @@ def member_detail(request, id):
 # -------------------------
 
 @login_required
+@admin_required
+def finance_dashboard(request):
+    """Admin view for finance department"""
+    finance_staff = Member.objects.filter(role='finance').select_related('user', 'department')
+    
+    # Get all members for reference
+    all_members = Member.objects.all().count()
+    
+    # Get total events (for context)
+    total_events = Event.objects.count()
+    
+    context = {
+        'finance_staff': finance_staff,
+        'all_members': all_members,
+        'total_events': total_events,
+        'section': 'finance'
+    }
+    return render(request, 'admin/finance_dashboard.html', context)
+
+@login_required
 def dashboard_view(request):
     user = request.user
     member = user.member
