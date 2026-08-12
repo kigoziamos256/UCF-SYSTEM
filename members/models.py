@@ -19,6 +19,7 @@ class Member(models.Model):
     ROLE_CHOICES = (
         ('admin', 'Admin'),
         ('leader', 'Leader'),
+        ('finance', 'Finance'),
         ('member', 'Member'),
     )
 
