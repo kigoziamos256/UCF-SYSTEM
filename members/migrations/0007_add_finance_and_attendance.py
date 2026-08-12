@@ -6,7 +6,7 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('members', '0006_add_cover_image_...'),  # ← REPLACE with your actual last migration name
+        ('members', '0006_add_cover_image'),  # ← REPLACE with your actual last migration name
     ]
 
     operations = [
