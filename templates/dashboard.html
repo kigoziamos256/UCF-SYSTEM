@@ -157,6 +157,42 @@
         </div>
     </div>
 
+    <!-- 📋 Attendance Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-clipboard-check text-primary"></i> Your Attendance Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="bg-success text-white p-3 rounded">
+                                <h3>{{ attendance_present|default:0 }}</h3>
+                                <small>Present</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-warning text-dark p-3 rounded">
+                                <h3>{{ attendance_late|default:0 }}</h3>
+                                <small>Late</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-danger text-white p-3 rounded">
+                                <h3>{{ attendance_absent|default:0 }}</h3>
+                                <small>Absent</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-2">
+                        <small class="text-muted">Total events attended: <strong>{{ attendance_present|default:0|add:attendance_late|default:0 }}</strong></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Quick Actions (for admin/leader) -->
     {% if user.member.role == 'admin' or user.member.role == 'leader' %}
     <div class="row mb-4">
@@ -173,6 +209,9 @@
                         </a>
                         <a href="{% url 'create_department' %}" class="btn btn-secondary">
                             <i class="bi bi-building-add"></i> New Department
+                        </a>
+                        <a href="{% url 'finance_dashboard' %}" class="btn btn-success">
+                            <i class="bi bi-wallet2"></i> Finance
                         </a>
                         {% endif %}
                         <a href="{% url 'assign_duty' %}" class="btn btn-warning">
