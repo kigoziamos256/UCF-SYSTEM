@@ -269,7 +269,16 @@ def calendar_view(request):
 @login_required
 def event_detail_view(request, event_id):
     event = get_object_or_404(Event, id=event_id)
-
+    user_member = request.user.member
+    
+    # Check if user has already marked attendance
+    attendance = None
+    if request.user.is_authenticated:
+        try:
+            attendance = Attendance.objects.get(event=event, member=user_member)
+        except Attendance.DoesNotExist:
+            pass
+    
     if request.method == "POST":
         if 'join' in request.POST:
             if request.user not in event.attendees.all():
@@ -279,9 +288,34 @@ def event_detail_view(request, event_id):
             if request.user in event.attendees.all():
                 event.attendees.remove(request.user)
                 messages.success(request, "You have left the event!")
+        elif 'mark_attendance' in request.POST:
+            form = AttendanceForm(request.POST)
+            if form.is_valid():
+                attendance = form.save(commit=False)
+                attendance.event = event
+                attendance.member = user_member
+                attendance.checked_by = request.user
+                attendance.save()
+                messages.success(request, f"Attendance marked as {attendance.get_status_display()}!")
+                return redirect('event_detail', event_id=event.id)
         return redirect('event_detail', event_id=event.id)
-
-    return render(request, "event_detail.html", {"event": event})
+    
+    # Get attendance stats for this event
+    attendance_stats = {
+        'present': Attendance.objects.filter(event=event, status='present').count(),
+        'absent': Attendance.objects.filter(event=event, status='absent').count(),
+        'excused': Attendance.objects.filter(event=event, status='excused').count(),
+        'late': Attendance.objects.filter(event=event, status='late').count(),
+        'total': Attendance.objects.filter(event=event).count(),
+    }
+    
+    context = {
+        'event': event,
+        'attendance': attendance,
+        'attendance_stats': attendance_stats,
+        'attendance_form': AttendanceForm() if not attendance else None,
+    }
+    return render(request, "event_detail.html", context)
 
 
 # -------------------------
