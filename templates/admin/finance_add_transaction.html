@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Financial Transaction{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-plus-circle"></i> Record Financial Transaction</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Transaction Type *</label>
+                                {{ form.transaction_type }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Payment Method *</label>
+                                {{ form.payment_method }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Amount *</label>
+                                {{ form.amount }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Date *</label>
+                                {{ form.date }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Payer Name *</label>
+                                {{ form.payer_name }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Payer Phone</label>
+                                {{ form.payer_phone }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Payer Email</label>
+                                {{ form.payer_email }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Payer (Member)</label>
+                                {{ form.payer_member }}
+                                <div class="form-text">Select if this person is a church member</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            {{ form.description }}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Reference Number</label>
+                                {{ form.reference_number }}
+                                <div class="form-text">Transaction ID, Receipt number, etc.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Receipt Image</label>
+                                {{ form.receipt_image }}
+                                <div class="form-text">Upload a photo of the receipt (optional)</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            {{ form.notes }}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'finance_dashboard' %}" class="btn btn-secondary me-md-2">Cancel</a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check2"></i> Record Transaction
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
