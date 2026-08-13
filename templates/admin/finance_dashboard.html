@@ -1,118 +1,230 @@
 {% extends 'base.html' %}
 {% load profile_tags %}
+{% load static %}
 
 {% block title %}Finance Department{% endblock %}
+
+{% block extra_css %}
+<style>
+    .finance-card {
+        transition: transform 0.2s;
+    }
+    .finance-card:hover {
+        transform: translateY(-5px);
+    }
+    .finance-stats {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    .transaction-row:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="bi bi-wallet2 text-success"></i> Finance Department</h2>
-        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Back to Dashboard
-        </a>
+        <div>
+            <a href="{% url 'finance_add_transaction' %}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Add Transaction
+            </a>
+            <a href="{% url 'finance_transactions' %}" class="btn btn-outline-primary">
+                <i class="bi bi-list"></i> All Transactions
+            </a>
+            <a href="{% url 'finance_summary' %}" class="btn btn-outline-info">
+                <i class="bi bi-bar-chart"></i> Summary
+            </a>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+        </div>
     </div>
 
-    <!-- Stats Cards -->
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white finance-card">
+                <div class="card-body">
+                    <h6>Total Income</h6>
+                    <div class="finance-stats">${{ total_amount|floatformat:2 }}</div>
+                    <small>All time</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white finance-card">
+                <div class="card-body">
+                    <h6>Tithe</h6>
+                    <div class="finance-stats">${{ totals.tithe|floatformat:2 }}</div>
+                    <small>Total collected</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark finance-card">
+                <div class="card-body">
+                    <h6>Offertory</h6>
+                    <div class="finance-stats">${{ totals.offertory|floatformat:2 }}</div>
+                    <small>Total collected</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white finance-card">
+                <div class="card-body">
+                    <h6>Donations</h6>
+                    <div class="finance-stats">${{ totals.donation|floatformat:2 }}</div>
+                    <small>Total collected</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Type Breakdown -->
     <div class="row mb-4">
         <div class="col-md-4">
-            <div class="card bg-success text-white">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-phone"></i> Mobile Money</h6>
+                </div>
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3>{{ finance_staff|length }}</h3>
-                            <small>Finance Staff</small>
-                        </div>
-                        <i class="bi bi-people fs-1"></i>
-                    </div>
+                    <div class="finance-stats text-primary">${{ totals.mobile_money|floatformat:2 }}</div>
+                    <small>Total mobile money transactions</small>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card bg-info text-white">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-bank"></i> Bank Transfers</h6>
+                </div>
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3>{{ all_members }}</h3>
-                            <small>Total Members</small>
-                        </div>
-                        <i class="bi bi-person-arms-up fs-1"></i>
-                    </div>
+                    <div class="finance-stats text-success">${{ totals.bank_transfer|floatformat:2 }}</div>
+                    <small>Total bank transfers</small>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card bg-warning text-white">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-gift"></i> Special/Offering</h6>
+                </div>
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3>{{ total_events }}</h3>
-                            <small>Total Events</small>
-                        </div>
-                        <i class="bi bi-calendar-event fs-1"></i>
-                    </div>
+                    <div class="finance-stats text-warning">${{ totals.special|add:totals.offering|floatformat:2 }}</div>
+                    <small>Special offerings collected</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Finance Staff List -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-white">
-            <h5 class="mb-0"><i class="bi bi-person-badge"></i> Finance Staff Members</h5>
+    <!-- Today's Transactions -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Today's Transactions</h5>
+            <span class="badge bg-primary">{{ today_transactions.count }}</span>
         </div>
         <div class="card-body">
-            {% if finance_staff %}
+            {% if today_transactions %}
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Profile</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Department</th>
-                                <th>Phone</th>
+                                <th>Type</th>
+                                <th>Payer</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Time</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for staff in finance_staff %}
-                            <tr>
+                            {% for tx in today_transactions %}
+                            <tr class="transaction-row">
                                 <td>
-                                    {% profile_picture staff.user 40 'border border-2 border-primary' %}
+                                    <span class="badge 
+                                        {% if tx.transaction_type == 'tithe' %}bg-success
+                                        {% elif tx.transaction_type == 'donation' %}bg-info
+                                        {% elif tx.transaction_type == 'mobile_money' %}bg-primary
+                                        {% elif tx.transaction_type == 'bank_transfer' %}bg-secondary
+                                        {% else %}bg-warning{% endif %}">
+                                        {{ tx.get_transaction_type_display }}
+                                    </span>
                                 </td>
+                                <td>{{ tx.payer_name }}</td>
+                                <td><strong>${{ tx.amount|floatformat:2 }}</strong></td>
+                                <td>{{ tx.get_payment_method_display }}</td>
+                                <td><small>{{ tx.recorded_at|date:"H:i" }}</small></td>
                                 <td>
-                                    <strong>{{ staff.user.get_full_name|default:staff.user.username }}</strong>
-                                    <br>
-                                    <small class="text-muted">@{{ staff.user.username }}</small>
-                                </td>
-                                <td>{{ staff.user.email }}</td>
-                                <td>
-                                    {% if staff.department %}
-                                        {{ staff.department.name }}
-                                    {% else %}
-                                        <span class="text-muted">N/A</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ staff.phone_number|default:"N/A" }}</td>
-                                <td>
-                                    <a href="{% url 'member_detail' staff.id %}" class="btn btn-sm btn-outline-primary">
+                                    <button class="btn btn-sm btn-outline-primary" title="View Details">
                                         <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="#" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
+                                    </button>
                                 </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-primary">
+                                <th colspan="2">Total Today</th>
+                                <th colspan="4">
+                                    {% with today_total=today_transactions|sum:'amount' %}
+                                        ${{ today_transactions|sum:"amount"|floatformat:2 }}
+                                    {% endwith %}
+                                </th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center mb-0">No transactions recorded today.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="card mt-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Transactions (Last 30 Days)</h5>
+            <a href="{% url 'finance_transactions' %}" class="btn btn-sm btn-outline-primary">View All</a>
+        </div>
+        <div class="card-body">
+            {% if recent_transactions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Payer</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in recent_transactions|slice:":10" %}
+                            <tr class="transaction-row">
+                                <td>{{ tx.date|date:"M d, Y" }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if tx.transaction_type == 'tithe' %}bg-success
+                                        {% elif tx.transaction_type == 'donation' %}bg-info
+                                        {% elif tx.transaction_type == 'mobile_money' %}bg-primary
+                                        {% elif tx.transaction_type == 'bank_transfer' %}bg-secondary
+                                        {% else %}bg-warning{% endif %}">
+                                        {{ tx.get_transaction_type_display }}
+                                    </span>
+                                </td>
+                                <td>{{ tx.payer_name }}</td>
+                                <td><strong>${{ tx.amount|floatformat:2 }}</strong></td>
+                                <td>{{ tx.get_payment_method_display }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             {% else %}
-                <div class="text-center py-5">
-                    <i class="bi bi-people fs-1 text-muted"></i>
-                    <p class="text-muted mt-3">No finance staff members assigned yet.</p>
-                    <a href="#" class="btn btn-primary btn-sm">Add Finance Staff</a>
-                </div>
+                <p class="text-muted text-center mb-0">No recent transactions.</p>
             {% endif %}
         </div>
     </div>
