@@ -1,5 +1,5 @@
 from django import forms
-from .models import Event, Member, Duty, Announcement, Department, Attendance
+from .models import Event, Member, Duty, Announcement, Department, Attendance, FinancialTransaction
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 
