@@ -10,7 +10,7 @@ from django.contrib import messages
 from .models import Event, Member, Duty, Announcement, Notification, Attendance, Department, FinancialTransaction
 from .forms import (
     EventForm, MemberRegistrationForm, DutyForm, AnnouncementForm,
-    DepartmentForm, ProfilePictureForm, UserRegisterForm, AttendanceForm  # ✅ Fixed typo here
+    DepartmentForm, ProfilePictureForm, UserRegisterForm, AttendanceForm, FinancialTransactionForm  # ✅ Fixed typo here
 )
 
 
