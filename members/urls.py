@@ -38,4 +38,10 @@ urlpatterns = [
     # 👇 ADD THIS LINE - Temporary admin creator
     path('make-admin/', views.make_admin, name='make_admin'),
     path('promote-to-admin/', views.promote_to_admin, name='promote_to_admin'),
+
+    # Finance
+    path('finance/', views.finance_dashboard, name='finance_dashboard'),
+    path('finance/add/', views.finance_add_transaction, name='finance_add_transaction'),
+    path('finance/transactions/', views.finance_transactions, name='finance_transactions'),
+    path('finance/summary/', views.finance_summary, name='finance_summary'),
 ]
