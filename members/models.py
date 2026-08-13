@@ -121,6 +121,92 @@ class Attendance(models.Model):
     def __str__(self):
         return f"{self.member.user.username} - {self.event.title} - {self.status}"
 
+# ==================== FINANCE ====================
+class FinancialTransaction(models.Model):
+    TRANSACTION_TYPES = (
+        ('tithe', 'Tithe'),
+        ('offertory', 'Offertory'),
+        ('mobile_money', 'Mobile Money'),
+        ('bank_transfer', 'Bank Transfer'),
+        ('donation', 'Donation'),
+        ('offering', 'Offering'),
+        ('special', 'Special Offering'),
+    )
+    
+    PAYMENT_METHODS = (
+        ('cash', 'Cash'),
+        ('mobile_money', 'Mobile Money'),
+        ('bank_transfer', 'Bank Transfer'),
+        ('cheque', 'Cheque'),
+        ('card', 'Card'),
+    )
+    
+    # Transaction details
+    transaction_type = models.CharField(max_length=50, choices=TRANSACTION_TYPES)
+    payment_method = models.CharField(max_length=50, choices=PAYMENT_METHODS, default='cash')
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    date = models.DateField(default=timezone.now)
+    
+    # Payer details
+    payer_name = models.CharField(max_length=200)
+    payer_phone = models.CharField(max_length=20, blank=True)
+    payer_email = models.EmailField(blank=True)
+    payer_member = models.ForeignKey(Member, on_delete=models.SET_NULL, null=True, blank=True, related_name='transactions')
+    
+    # Additional info
+    description = models.TextField(blank=True)
+    reference_number = models.CharField(max_length=100, blank=True, help_text="Transaction reference or receipt number")
+    notes = models.TextField(blank=True)
+    
+    # Record keeping
+    recorded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='recorded_transactions')
+    recorded_at = models.DateTimeField(auto_now_add=True)
+    
+    # Receipt attachment (optional)
+    receipt_image = ProcessedImageField(
+        upload_to='finance/receipts/',
+        processors=[ResizeToFill(800, 600)],
+        format='JPEG',
+        options={'quality': 85},
+        null=True,
+        blank=True
+    )
+    
+    class Meta:
+        ordering = ['-date', '-recorded_at']
+        verbose_name = "Financial Transaction"
+        verbose_name_plural = "Financial Transactions"
+    
+    def __str__(self):
+        return f"{self.get_transaction_type_display()} - {self.payer_name} - ${self.amount}"
+    
+    def get_category_display(self):
+        return self.get_transaction_type_display()
+
+
+class FinanceSummary(models.Model):
+    """Monthly/Yearly financial summary"""
+    year = models.IntegerField()
+    month = models.IntegerField(null=True, blank=True)
+    total_tithe = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_offertory = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_donations = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_mobile_money = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_bank_transfer = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_offering = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_special = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['year', 'month']
+        ordering = ['-year', '-month']
+    
+    def __str__(self):
+        if self.month:
+            return f"{self.year} - {self.month} Summary"
+        return f"{self.year} Summary"
+
 
 # ==================== DUTY ====================
 class Duty(models.Model):
