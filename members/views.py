@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.contrib import messages
 
-from .models import Event, Member, Duty, Announcement, Notification, Attendance, Department
+from .models import Event, Member, Duty, Announcement, Notification, Attendance, Department, FinancialTransaction
 from .forms import (
     EventForm, MemberRegistrationForm, DutyForm, AnnouncementForm,
     DepartmentForm, ProfilePictureForm, UserRegisterForm, AttendanceForm  # ✅ Fixed typo here
