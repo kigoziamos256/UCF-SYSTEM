@@ -149,3 +149,11 @@ class NotificationAdmin(admin.ModelAdmin):
             'classes': ('collapse',),
         }),
     )
+
+@admin.register(FinancialTransaction)
+class FinancialTransactionAdmin(admin.ModelAdmin):
+    list_display = ('transaction_type', 'payer_name', 'amount', 'date', 'payment_method', 'recorded_by', 'recorded_at')
+    list_filter = ('transaction_type', 'payment_method', 'date')
+    search_fields = ('payer_name', 'payer_phone', 'reference_number', 'description')
+    readonly_fields = ('recorded_at',)
+    date_hierarchy = 'date'
