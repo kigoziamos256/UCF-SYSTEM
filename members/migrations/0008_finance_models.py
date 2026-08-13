@@ -1,6 +1,7 @@
 from django.db import migrations, models
 import django.utils.timezone
 import imagekit.models.fields
+from imagekit.processors import ResizeToFill
 
 class Migration(migrations.Migration):
 
