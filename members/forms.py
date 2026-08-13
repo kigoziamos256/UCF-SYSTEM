@@ -96,3 +96,47 @@ class UserRegisterForm(UserCreationForm):
     class Meta:
         model = User
         fields = ['username', 'email', 'first_name', 'last_name', 'password1', 'password2']
+
+class FinancialTransactionForm(forms.ModelForm):
+    class Meta:
+        model = FinancialTransaction
+        fields = [
+            'transaction_type', 'payment_method', 'amount', 'date',
+            'payer_name', 'payer_phone', 'payer_email', 'payer_member',
+            'description', 'reference_number', 'notes', 'receipt_image'
+        ]
+        widgets = {
+            'transaction_type': forms.Select(attrs={'class': 'form-control'}),
+            'payment_method': forms.Select(attrs={'class': 'form-control'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'payer_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'payer_phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'payer_email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'payer_member': forms.Select(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'reference_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'receipt_image': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+        }
+
+
+class FinanceFilterForm(forms.Form):
+    transaction_type = forms.ChoiceField(
+        choices=[('', 'All Types')] + list(FinancialTransaction.TRANSACTION_TYPES),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    payment_method = forms.ChoiceField(
+        choices=[('', 'All Methods')] + list(FinancialTransaction.PAYMENT_METHODS),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    date_from = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+    )
+    date_to = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+    )
