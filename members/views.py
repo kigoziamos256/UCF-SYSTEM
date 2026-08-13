@@ -500,3 +500,177 @@ def mark_notification_read(request, notification_id):
     notification.is_read = True
     notification.save()
     return redirect('dashboard')
+
+
+# -------------------------
+# FINANCE
+# -------------------------
+
+@login_required
+@admin_required
+def finance_dashboard(request):
+    """Admin view for finance department with summary"""
+    finance_staff = Member.objects.filter(role='finance').select_related('user', 'department')
+    all_members = Member.objects.count()
+    total_events = Event.objects.count()
+    
+    # Get all transactions
+    transactions = FinancialTransaction.objects.all().order_by('-date', '-recorded_at')[:50]
+    
+    # Calculate totals by type
+    totals = {
+        'tithe': FinancialTransaction.objects.filter(transaction_type='tithe').aggregate(Sum('amount'))['amount__sum'] or 0,
+        'offertory': FinancialTransaction.objects.filter(transaction_type='offertory').aggregate(Sum('amount'))['amount__sum'] or 0,
+        'donation': FinancialTransaction.objects.filter(transaction_type='donation').aggregate(Sum('amount'))['amount__sum'] or 0,
+        'mobile_money': FinancialTransaction.objects.filter(transaction_type='mobile_money').aggregate(Sum('amount'))['amount__sum'] or 0,
+        'bank_transfer': FinancialTransaction.objects.filter(transaction_type='bank_transfer').aggregate(Sum('amount'))['amount__sum'] or 0,
+        'offering': FinancialTransaction.objects.filter(transaction_type='offering').aggregate(Sum('amount'))['amount__sum'] or 0,
+        'special': FinancialTransaction.objects.filter(transaction_type='special').aggregate(Sum('amount'))['amount__sum'] or 0,
+    }
+    
+    # Today's transactions
+    today = timezone.now().date()
+    today_transactions = FinancialTransaction.objects.filter(date=today).order_by('-recorded_at')
+    
+    # Total amount
+    total_amount = FinancialTransaction.objects.aggregate(Sum('amount'))['amount__sum'] or 0
+    
+    # Last 30 days
+    thirty_days_ago = today - timezone.timedelta(days=30)
+    recent_transactions = FinancialTransaction.objects.filter(
+        date__gte=thirty_days_ago
+    ).order_by('-date', '-recorded_at')
+    
+    context = {
+        'finance_staff': finance_staff,
+        'all_members': all_members,
+        'total_events': total_events,
+        'transactions': transactions,
+        'today_transactions': today_transactions,
+        'recent_transactions': recent_transactions,
+        'totals': totals,
+        'total_amount': total_amount,
+        'section': 'finance'
+    }
+    return render(request, 'admin/finance_dashboard.html', context)
+
+
+@login_required
+@admin_required
+def finance_add_transaction(request):
+    """Add a new financial transaction"""
+    if request.method == 'POST':
+        form = FinancialTransactionForm(request.POST, request.FILES)
+        if form.is_valid():
+            transaction = form.save(commit=False)
+            transaction.recorded_by = request.user
+            transaction.save()
+            messages.success(request, f"Transaction of {transaction.get_transaction_type_display()} for {transaction.amount} recorded!")
+            return redirect('finance_dashboard')
+    else:
+        form = FinancialTransactionForm()
+    
+    return render(request, 'admin/finance_add_transaction.html', {'form': form})
+
+
+@login_required
+@admin_required
+def finance_transactions(request):
+    """View all financial transactions with filtering"""
+    transactions = FinancialTransaction.objects.all().order_by('-date', '-recorded_at')
+    
+    # Filtering
+    form = FinanceFilterForm(request.GET)
+    if form.is_valid():
+        if form.cleaned_data.get('transaction_type'):
+            transactions = transactions.filter(transaction_type=form.cleaned_data['transaction_type'])
+        if form.cleaned_data.get('payment_method'):
+            transactions = transactions.filter(payment_method=form.cleaned_data['payment_method'])
+        if form.cleaned_data.get('date_from'):
+            transactions = transactions.filter(date__gte=form.cleaned_data['date_from'])
+        if form.cleaned_data.get('date_to'):
+            transactions = transactions.filter(date__lte=form.cleaned_data['date_to'])
+    
+    # Calculate total
+    total = transactions.aggregate(Sum('amount'))['amount__sum'] or 0
+    
+    context = {
+        'transactions': transactions,
+        'form': form,
+        'total': total,
+        'section': 'finance'
+    }
+    return render(request, 'admin/finance_transactions.html', context)
+
+
+@login_required
+@admin_required
+def finance_summary(request):
+    """Financial summary by month/year with charts"""
+    from django.db.models import Sum
+    from datetime import datetime
+    
+    # Get current year
+    current_year = datetime.now().year
+    
+    # Monthly summary for current year
+    monthly_data = []
+    for month in range(1, 13):
+        monthly_total = FinancialTransaction.objects.filter(
+            date__year=current_year,
+            date__month=month
+        ).aggregate(Sum('amount'))['amount__sum'] or 0
+        
+        # Get breakdown by type for this month
+        tithe = FinancialTransaction.objects.filter(
+            date__year=current_year,
+            date__month=month,
+            transaction_type='tithe'
+        ).aggregate(Sum('amount'))['amount__sum'] or 0
+        
+        offertory = FinancialTransaction.objects.filter(
+            date__year=current_year,
+            date__month=month,
+            transaction_type='offertory'
+        ).aggregate(Sum('amount'))['amount__sum'] or 0
+        
+        donation = FinancialTransaction.objects.filter(
+            date__year=current_year,
+            date__month=month,
+            transaction_type='donation'
+        ).aggregate(Sum('amount'))['amount__sum'] or 0
+        
+        monthly_data.append({
+            'month': month,
+            'month_name': timezone.datetime(current_year, month, 1).strftime('%B'),
+            'total': monthly_total,
+            'tithe': tithe,
+            'offertory': offertory,
+            'donation': donation,
+        })
+    
+    # Yearly totals
+    yearly_totals = {
+        'tithe': FinancialTransaction.objects.filter(transaction_type='tithe', date__year=current_year).aggregate(Sum('amount'))['amount__sum'] or 0,
+        'offertory': FinancialTransaction.objects.filter(transaction_type='offertory', date__year=current_year).aggregate(Sum('amount'))['amount__sum'] or 0,
+        'donation': FinancialTransaction.objects.filter(transaction_type='donation', date__year=current_year).aggregate(Sum('amount'))['amount__sum'] or 0,
+        'mobile_money': FinancialTransaction.objects.filter(transaction_type='mobile_money', date__year=current_year).aggregate(Sum('amount'))['amount__sum'] or 0,
+        'bank_transfer': FinancialTransaction.objects.filter(transaction_type='bank_transfer', date__year=current_year).aggregate(Sum('amount'))['amount__sum'] or 0,
+        'offering': FinancialTransaction.objects.filter(transaction_type='offering', date__year=current_year).aggregate(Sum('amount'))['amount__sum'] or 0,
+        'special': FinancialTransaction.objects.filter(transaction_type='special', date__year=current_year).aggregate(Sum('amount'))['amount__sum'] or 0,
+    }
+    yearly_total = sum(yearly_totals.values())
+    
+    # Daily summary (today)
+    today = timezone.now().date()
+    today_total = FinancialTransaction.objects.filter(date=today).aggregate(Sum('amount'))['amount__sum'] or 0
+    
+    context = {
+        'monthly_data': monthly_data,
+        'yearly_totals': yearly_totals,
+        'yearly_total': yearly_total,
+        'current_year': current_year,
+        'today_total': today_total,
+        'section': 'finance'
+    }
+    return render(request, 'admin/finance_summary.html', context)
