@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}All Financial Transactions{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-list"></i> All Transactions</h2>
+        <div>
+            <a href="{% url 'finance_add_transaction' %}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Add Transaction
+            </a>
+            <a href="{% url 'finance_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+    
+    <!-- Filter Form -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h6 class="mb-0"><i class="bi bi-funnel"></i> Filter Transactions</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row">
+                <div class="col-md-3 mb-2">
+                    {{ form.transaction_type.label_tag }}
+                    {{ form.transaction_type }}
+                </div>
+                <div class="col-md-3 mb-2">
+                    {{ form.payment_method.label_tag }}
+                    {{ form.payment_method }}
+                </div>
+                <div class="col-md-2 mb-2">
+                    {{ form.date_from.label_tag }}
+                    {{ form.date_from }}
+                </div>
+                <div class="col-md-2 mb-2">
+                    {{ form.date_to.label_tag }}
+                    {{ form.date_to }}
+                </div>
+                <div class="col-md-2 mb-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Transactions Table -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-table"></i> Transactions</h5>
+            <span class="badge bg-primary">{{ transactions.count }} records</span>
+        </div>
+        <div class="card-body">
+            {% if transactions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Payer</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Recorded By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in transactions %}
+                            <tr>
+                                <td>{{ tx.date|date:"M d, Y" }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if tx.transaction_type == 'tithe' %}bg-success
+                                        {% elif tx.transaction_type == 'donation' %}bg-info
+                                        {% elif tx.transaction_type == 'mobile_money' %}bg-primary
+                                        {% elif tx.transaction_type == 'bank_transfer' %}bg-secondary
+                                        {% else %}bg-warning{% endif %}">
+                                        {{ tx.get_transaction_type_display }}
+                                    </span>
+                                </td>
+                                <td>{{ tx.payer_name }}</td>
+                                <td><strong>${{ tx.amount|floatformat:2 }}</strong></td>
+                                <td>{{ tx.get_payment_method_display }}</td>
+                                <td>{{ tx.recorded_by.username }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-primary">
+                                <th colspan="3">Total</th>
+                                <th colspan="4">${{ total|floatformat:2 }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center mb-0">No transactions found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
