@@ -1,4 +1,3 @@
-# members/migrations/0009_add_currency_model.py
 from django.db import migrations, models
 
 class Migration(migrations.Migration):
