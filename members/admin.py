@@ -157,3 +157,9 @@ class FinancialTransactionAdmin(admin.ModelAdmin):
     search_fields = ('payer_name', 'payer_phone', 'reference_number', 'description')
     readonly_fields = ('recorded_at',)
     date_hierarchy = 'date'
+
+@admin.register(Currency)
+class CurrencyAdmin(admin.ModelAdmin):
+    list_display = ('code', 'symbol', 'name', 'is_default', 'is_active')
+    list_editable = ('is_default', 'is_active')
+    search_fields = ('code', 'name')
