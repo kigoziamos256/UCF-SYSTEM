@@ -1,4 +1,3 @@
-# members/migrations/0010_add_default_currency.py
 from django.db import migrations
 
 def create_default_currency(apps, schema_editor):
@@ -14,7 +13,7 @@ def create_default_currency(apps, schema_editor):
 
 def reverse_default_currency(apps, schema_editor):
     Currency = apps.get_model('members', 'Currency')
-    Currency.objects.filter(code='USD', is_default=True).delete()
+    Currency.objects.filter(code='UGX', is_default=True).delete()
 
 class Migration(migrations.Migration):
 
