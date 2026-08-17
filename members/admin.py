@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Member, Department, Event, Duty, Announcement, Notification, FinancialTransaction
+from .models import Member, Department, Event, Duty, Announcement, Notification, FinancialTransaction, Currency
 
 
 @admin.register(Event)
