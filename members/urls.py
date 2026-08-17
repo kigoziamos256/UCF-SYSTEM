@@ -44,4 +44,8 @@ urlpatterns = [
     path('finance/add/', views.finance_add_transaction, name='finance_add_transaction'),
     path('finance/transactions/', views.finance_transactions, name='finance_transactions'),
     path('finance/summary/', views.finance_summary, name='finance_summary'),
+    path('finance/budget/', views.finance_budget, name='finance_budget'),
+    path('finance/requisition/', views.finance_requisition, name='finance_requisition'),
+    path('finance/requisition/<int:req_id>/approve/', views.finance_requisition_approve, name='finance_requisition_approve'),
+    path('finance/reconciliation/', views.finance_reconciliation, name='finance_reconciliation'),
 ]
