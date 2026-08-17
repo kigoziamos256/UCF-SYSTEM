@@ -3,6 +3,11 @@ from .models import Event, Member, Duty, Announcement, Department, Attendance, F
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 
+from .models import (
+    FinancialTransaction, Budget, ExpenseRequisition, BankReconciliation,
+    IncomeCategory, ExpenseCategory, Vendor, Currency
+)
+
 
 class EventForm(forms.ModelForm):
     class Meta:
@@ -119,6 +124,49 @@ class FinancialTransactionForm(forms.ModelForm):
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'receipt_image': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
         }
+
+class BudgetForm(forms.ModelForm):
+    class Meta:
+        model = Budget
+        fields = ['department', 'income_category', 'expense_category', 'frequency', 'period_month', 'period_year', 'budgeted_amount']
+        widgets = {
+            'department': forms.Select(attrs={'class': 'form-control'}),
+            'income_category': forms.Select(attrs={'class': 'form-control'}),
+            'expense_category': forms.Select(attrs={'class': 'form-control'}),
+            'frequency': forms.Select(attrs={'class': 'form-control'}),
+            'period_month': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 12}),
+            'period_year': forms.NumberInput(attrs={'class': 'form-control'}),
+            'budgeted_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }
+
+
+class ExpenseRequisitionForm(forms.ModelForm):
+    class Meta:
+        model = ExpenseRequisition
+        fields = ['title', 'description', 'department', 'expense_category', 'estimated_amount', 'vendor']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'department': forms.Select(attrs={'class': 'form-control'}),
+            'expense_category': forms.Select(attrs={'class': 'form-control'}),
+            'estimated_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'vendor': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+
+class BankReconciliationForm(forms.ModelForm):
+    class Meta:
+        model = BankReconciliation
+        fields = ['bank_name', 'account_number', 'statement_date', 'statement_balance', 'ledger_balance', 'notes']
+        widgets = {
+            'bank_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'account_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'statement_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'statement_balance': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'ledger_balance': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
 
 
 class FinanceFilterForm(forms.Form):
