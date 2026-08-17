@@ -4,7 +4,7 @@ from decimal import Decimal
 from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -20,6 +20,7 @@ from .forms import (
     FinancialTransactionForm, BudgetForm, ExpenseRequisitionForm,
     BankReconciliationForm, FinanceFilterForm
 )
+
 
 # -------------------------
 # DECORATORS
@@ -96,6 +97,7 @@ def promote_to_admin(request):
     else:
         messages.error(request, "You need to be a superuser to do this.")
     return redirect('dashboard')
+
 
 @login_required
 @admin_required
@@ -180,131 +182,6 @@ def member_detail(request, id):
 # -------------------------
 
 @login_required
-@admin_required
-def finance_dashboard(request):
-    """Admin view for finance department with summary"""
-    
-    # Get all transactions
-    transactions = FinancialTransaction.objects.all().order_by('-date', '-recorded_at')
-    
-    # Income vs Expense totals
-    total_income = FinancialTransaction.objects.filter(transaction_type='income').aggregate(Sum('amount'))['amount__sum'] or 0
-    total_expense = FinancialTransaction.objects.filter(transaction_type='expense').aggregate(Sum('amount'))['amount__sum'] or 0
-    net_balance = total_income - total_expense
-    
-    # Income by sub-type
-    income_by_type = {}
-    for sub_type, label in FinancialTransaction.INCOME_SUB_TYPES:
-        amount = FinancialTransaction.objects.filter(
-            transaction_type='income',
-            income_sub_type=sub_type
-        ).aggregate(Sum('amount'))['amount__sum'] or 0
-        income_by_type[sub_type] = {
-            'label': label,
-            'amount': amount
-        }
-    
-    # Expense by sub-type
-    expense_by_type = {}
-    for sub_type, label in FinancialTransaction.EXPENSE_SUB_TYPES:
-        amount = FinancialTransaction.objects.filter(
-            transaction_type='expense',
-            expense_sub_type=sub_type
-        ).aggregate(Sum('amount'))['amount__sum'] or 0
-        expense_by_type[sub_type] = {
-            'label': label,
-            'amount': amount
-        }
-    
-    # Today's transactions
-    today = timezone.now().date()
-    today_income = FinancialTransaction.objects.filter(date=today, transaction_type='income').aggregate(Sum('amount'))['amount__sum'] or 0
-    today_expense = FinancialTransaction.objects.filter(date=today, transaction_type='expense').aggregate(Sum('amount'))['amount__sum'] or 0
-    today_transactions = FinancialTransaction.objects.filter(date=today).order_by('-recorded_at')
-    
-    # 👇 Calculate today's total (for the template)
-    today_total = today_transactions.aggregate(Sum('amount'))['amount__sum'] or 0
-    
-    # Recent transactions (last 30 days)
-    thirty_days_ago = today - timezone.timedelta(days=30)
-    recent_transactions = FinancialTransaction.objects.filter(
-        date__gte=thirty_days_ago
-    ).order_by('-date', '-recorded_at')
-    
-    # Pending invoices (expenses with due date)
-    pending_invoices = FinancialTransaction.objects.filter(
-        transaction_type='expense',
-        is_paid=False,
-        due_date__isnull=False,
-        due_date__gte=today
-    ).count()
-    
-    overdue_invoices = FinancialTransaction.objects.filter(
-        transaction_type='expense',
-        is_paid=False,
-        due_date__lt=today
-    ).count()
-    
-    # Aging Accounts Receivable (for income)
-    ar_0_30 = FinancialTransaction.objects.filter(
-        transaction_type='income',
-        is_paid=False
-    ).filter(date__gte=today - timezone.timedelta(days=30)).aggregate(Sum('amount'))['amount__sum'] or 0
-    
-    ar_31_60 = FinancialTransaction.objects.filter(
-        transaction_type='income',
-        is_paid=False
-    ).filter(date__lt=today - timezone.timedelta(days=30), date__gte=today - timezone.timedelta(days=60)).aggregate(Sum('amount'))['amount__sum'] or 0
-    
-    ar_60_plus = FinancialTransaction.objects.filter(
-        transaction_type='income',
-        is_paid=False
-    ).filter(date__lt=today - timezone.timedelta(days=60)).aggregate(Sum('amount'))['amount__sum'] or 0
-    
-    # Budget alerts
-    budgets = Budget.objects.filter(is_active=True, period_year=today.year)
-    budget_alerts = []
-    for budget in budgets:
-        variance = budget.get_variance()
-        if budget.income_category:
-            if variance < -budget.budgeted_amount * 0.1:
-                budget_alerts.append({
-                    'budget': budget,
-                    'message': f"Income {budget.category_name()} is below target by ${abs(variance):.2f}",
-                    'status': 'danger'
-                })
-        else:
-            if variance < -budget.budgeted_amount * 0.1:
-                budget_alerts.append({
-                    'budget': budget,
-                    'message': f"Expense {budget.category_name()} is over budget by ${abs(variance):.2f}",
-                    'status': 'danger'
-                })
-    
-    # 👇 Add today_total to the context
-    context = {
-        'total_income': total_income,
-        'total_expense': total_expense,
-        'net_balance': net_balance,
-        'income_by_type': income_by_type,
-        'expense_by_type': expense_by_type,
-        'today_income': today_income,
-        'today_expense': today_expense,
-        'today_transactions': today_transactions,
-        'today_total': today_total,  # 👈 Add this line
-        'recent_transactions': recent_transactions,
-        'pending_invoices': pending_invoices,
-        'overdue_invoices': overdue_invoices,
-        'ar_0_30': ar_0_30,
-        'ar_31_60': ar_31_60,
-        'ar_60_plus': ar_60_plus,
-        'budget_alerts': budget_alerts,
-        'section': 'finance'
-    }
-    return render(request, 'admin/finance_dashboard.html', context)
-
-
-@login_required
 def dashboard_view(request):
     user = request.user
     member = user.member
@@ -338,7 +215,6 @@ def dashboard_view(request):
     else:
         announcements = Announcement.objects.all().order_by("-date_posted")[:5]
 
-    # Attendance stats
     attendance_present = Attendance.objects.filter(member=member, status='present').count()
     attendance_late = Attendance.objects.filter(member=member, status='late').count()
     attendance_absent = Attendance.objects.filter(member=member, status='absent').count()
@@ -401,7 +277,6 @@ def event_detail_view(request, event_id):
     event = get_object_or_404(Event, id=event_id)
     user_member = request.user.member
 
-    # Check if user has already marked attendance
     attendance = None
     try:
         attendance = Attendance.objects.get(event=event, member=user_member)
@@ -618,187 +493,13 @@ def mark_notification_read(request, notification_id):
 
 
 # -------------------------
-# FINANCE
+# FINANCE VIEWS
 # -------------------------
 
 @login_required
 @admin_required
 def finance_dashboard(request):
     """Admin view for finance department with summary"""
-    finance_staff = Member.objects.filter(role='finance').select_related('user', 'department')
-    all_members = Member.objects.count()
-    total_events = Event.objects.count()
-    
-    # Get all transactions
-    transactions = FinancialTransaction.objects.all().order_by('-date', '-recorded_at')[:50]
-    
-    # Calculate totals by type
-    totals = {
-        'tithe': FinancialTransaction.objects.filter(transaction_type='tithe').aggregate(Sum('amount'))['amount__sum'] or 0,
-        'offertory': FinancialTransaction.objects.filter(transaction_type='offertory').aggregate(Sum('amount'))['amount__sum'] or 0,
-        'donation': FinancialTransaction.objects.filter(transaction_type='donation').aggregate(Sum('amount'))['amount__sum'] or 0,
-        'mobile_money': FinancialTransaction.objects.filter(transaction_type='mobile_money').aggregate(Sum('amount'))['amount__sum'] or 0,
-        'bank_transfer': FinancialTransaction.objects.filter(transaction_type='bank_transfer').aggregate(Sum('amount'))['amount__sum'] or 0,
-        'offering': FinancialTransaction.objects.filter(transaction_type='offering').aggregate(Sum('amount'))['amount__sum'] or 0,
-        'special': FinancialTransaction.objects.filter(transaction_type='special').aggregate(Sum('amount'))['amount__sum'] or 0,
-    }
-    
-    # Today's transactions
-    today = timezone.now().date()
-    today_transactions = FinancialTransaction.objects.filter(date=today).order_by('-recorded_at')
-    
-    # Total amount
-    total_amount = FinancialTransaction.objects.aggregate(Sum('amount'))['amount__sum'] or 0
-    
-    # Last 30 days
-    thirty_days_ago = today - timezone.timedelta(days=30)
-    recent_transactions = FinancialTransaction.objects.filter(
-        date__gte=thirty_days_ago
-    ).order_by('-date', '-recorded_at')
-    
-    context = {
-        'finance_staff': finance_staff,
-        'all_members': all_members,
-        'total_events': total_events,
-        'transactions': transactions,
-        'today_transactions': today_transactions,
-        'recent_transactions': recent_transactions,
-        'totals': totals,
-        'total_amount': total_amount,
-        'section': 'finance'
-    }
-    return render(request, 'admin/finance_dashboard.html', context)
-
-
-@login_required
-@admin_required
-def finance_add_transaction(request):
-    """Add a new financial transaction"""
-    if request.method == 'POST':
-        form = FinancialTransactionForm(request.POST, request.FILES)
-        if form.is_valid():
-            transaction = form.save(commit=False)
-            transaction.recorded_by = request.user
-            transaction.save()
-            messages.success(request, f"Transaction of {transaction.get_transaction_type_display()} for {transaction.amount} recorded!")
-            return redirect('finance_dashboard')
-    else:
-        form = FinancialTransactionForm()
-    
-    return render(request, 'admin/finance_add_transaction.html', {'form': form})
-
-
-@login_required
-@admin_required
-def finance_transactions(request):
-    """View all financial transactions with filtering"""
-    transactions = FinancialTransaction.objects.all().order_by('-date', '-recorded_at')
-    
-    # Filtering
-    form = FinanceFilterForm(request.GET)
-    if form.is_valid():
-        if form.cleaned_data.get('transaction_type'):
-            transactions = transactions.filter(transaction_type=form.cleaned_data['transaction_type'])
-        if form.cleaned_data.get('payment_method'):
-            transactions = transactions.filter(payment_method=form.cleaned_data['payment_method'])
-        if form.cleaned_data.get('date_from'):
-            transactions = transactions.filter(date__gte=form.cleaned_data['date_from'])
-        if form.cleaned_data.get('date_to'):
-            transactions = transactions.filter(date__lte=form.cleaned_data['date_to'])
-    
-    # Calculate total
-    total = transactions.aggregate(Sum('amount'))['amount__sum'] or 0
-    
-    context = {
-        'transactions': transactions,
-        'form': form,
-        'total': total,
-        'section': 'finance'
-    }
-    return render(request, 'admin/finance_transactions.html', context)
-
-
-@login_required
-@admin_required
-def finance_summary(request):
-    """Financial summary by month/year with charts"""
-    from django.db.models import Sum
-    from datetime import datetime
-    
-    # Get current year
-    current_year = datetime.now().year
-    
-    # Monthly summary for current year
-    monthly_data = []
-    for month in range(1, 13):
-        monthly_total = FinancialTransaction.objects.filter(
-            date__year=current_year,
-            date__month=month
-        ).aggregate(Sum('amount'))['amount__sum'] or 0
-        
-        # Get breakdown by type for this month
-        tithe = FinancialTransaction.objects.filter(
-            date__year=current_year,
-            date__month=month,
-            transaction_type='tithe'
-        ).aggregate(Sum('amount'))['amount__sum'] or 0
-        
-        offertory = FinancialTransaction.objects.filter(
-            date__year=current_year,
-            date__month=month,
-            transaction_type='offertory'
-        ).aggregate(Sum('amount'))['amount__sum'] or 0
-        
-        donation = FinancialTransaction.objects.filter(
-            date__year=current_year,
-            date__month=month,
-            transaction_type='donation'
-        ).aggregate(Sum('amount'))['amount__sum'] or 0
-        
-        monthly_data.append({
-            'month': month,
-            'month_name': timezone.datetime(current_year, month, 1).strftime('%B'),
-            'total': monthly_total,
-            'tithe': tithe,
-            'offertory': offertory,
-            'donation': donation,
-        })
-    
-    # Yearly totals
-    yearly_totals = {
-        'tithe': FinancialTransaction.objects.filter(transaction_type='tithe', date__year=current_year).aggregate(Sum('amount'))['amount__sum'] or 0,
-        'offertory': FinancialTransaction.objects.filter(transaction_type='offertory', date__year=current_year).aggregate(Sum('amount'))['amount__sum'] or 0,
-        'donation': FinancialTransaction.objects.filter(transaction_type='donation', date__year=current_year).aggregate(Sum('amount'))['amount__sum'] or 0,
-        'mobile_money': FinancialTransaction.objects.filter(transaction_type='mobile_money', date__year=current_year).aggregate(Sum('amount'))['amount__sum'] or 0,
-        'bank_transfer': FinancialTransaction.objects.filter(transaction_type='bank_transfer', date__year=current_year).aggregate(Sum('amount'))['amount__sum'] or 0,
-        'offering': FinancialTransaction.objects.filter(transaction_type='offering', date__year=current_year).aggregate(Sum('amount'))['amount__sum'] or 0,
-        'special': FinancialTransaction.objects.filter(transaction_type='special', date__year=current_year).aggregate(Sum('amount'))['amount__sum'] or 0,
-    }
-    yearly_total = sum(yearly_totals.values())
-    
-    # Daily summary (today)
-    today = timezone.now().date()
-    today_total = FinancialTransaction.objects.filter(date=today).aggregate(Sum('amount'))['amount__sum'] or 0
-    
-    context = {
-        'monthly_data': monthly_data,
-        'yearly_totals': yearly_totals,
-        'yearly_total': yearly_total,
-        'current_year': current_year,
-        'today_total': today_total,
-        'section': 'finance'
-    }
-    return render(request, 'admin/finance_summary.html', context)
-
-# ==================== FINANCE VIEWS ====================
-
-@login_required
-@admin_required
-def finance_dashboard(request):
-    """Admin view for finance department with summary"""
-    # Get all transactions
-    transactions = FinancialTransaction.objects.all().order_by('-date', '-recorded_at')
-    
     # Income vs Expense totals
     total_income = FinancialTransaction.objects.filter(transaction_type='income').aggregate(Sum('amount'))['amount__sum'] or 0
     total_expense = FinancialTransaction.objects.filter(transaction_type='expense').aggregate(Sum('amount'))['amount__sum'] or 0
