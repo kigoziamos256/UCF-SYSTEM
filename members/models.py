@@ -207,6 +207,22 @@ class FinanceSummary(models.Model):
             return f"{self.year} - {self.month} Summary"
         return f"{self.year} Summary"
 
+class Currency(models.Model):
+    code = models.CharField(max_length=10, unique=True, help_text="e.g., USD, UGX, EUR, GBP")
+    symbol = models.CharField(max_length=10, help_text="e.g., $, UGX, €, £")
+    name = models.CharField(max_length=50, help_text="e.g., US Dollar, Uganda Shilling")
+    is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Currencies"
+        ordering = ['code']
+
+    def __str__(self):
+        return f"{self.code} ({self.symbol})"
+
 
 # ==================== DUTY ====================
 class Duty(models.Model):
