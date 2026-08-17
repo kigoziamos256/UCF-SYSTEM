@@ -7,8 +7,8 @@ def currency_context(request):
         default_currency = Currency.objects.first()
     if not default_currency:
         default_currency, _ = Currency.objects.get_or_create(
-            code='USD',
-            defaults={'symbol': '$', 'name': 'US Dollar', 'is_default': True}
+            code='UGX',
+            defaults={'symbol': 'UGX', 'name': 'Uganda Shilling', 'is_default': True}
         )
     return {
         'currency_symbol': default_currency.symbol,
