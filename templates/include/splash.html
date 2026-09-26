@@ -1,0 +1,45 @@
+{# Splash screen – shows on first load, hides after 2 seconds #}
+<div id="ucf-splash" style="
+    position: fixed; inset: 0; z-index: 9999;
+    background: #6B1F2E;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+">
+    <img src="{% static 'images/ucf-logo.png' %}" alt="UCF"
+         style="width: 140px; height: 140px; border-radius: 50%;
+                box-shadow: 0 0 40px rgba(255,255,255,0.25);
+                animation: ucf-pulse 1.8s ease-in-out infinite;">
+
+    <h1 style="
+        color: #fff; margin-top: 24px;
+        font-size: 1.3rem; letter-spacing: 2px;
+        font-weight: 600; text-align: center;
+    ">
+        UNIVERSITY COMMUNITY FELLOWSHIP
+    </h1>
+
+    <p style="color: #C9A227; margin-top: 8px; font-size: 0.85rem;
+              letter-spacing: 1px;">
+        Friends for life · Fellowship · Service · Stewardship
+    </p>
+</div>
+
+<style>
+@keyframes ucf-pulse {
+    0%   { transform: scale(1);    }
+    50%  { transform: scale(1.06); }
+    100% { transform: scale(1);    }
+}
+</style>
+
+<script>
+    // Hide the splash after 2 seconds
+    window.addEventListener('load', function () {
+        const splash = document.getElementById('ucf-splash');
+        setTimeout(() => {
+            splash.style.opacity = '0';
+            splash.style.visibility = 'hidden';
+        }, 2000);
+    });
+</script>
