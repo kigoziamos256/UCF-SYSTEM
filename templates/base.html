@@ -127,8 +127,12 @@
 {% include 'includes/splash.html' %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <a class="navbar-brand" href="{% url 'dashboard' %}">
-            <i class="bi bi-church"></i> UCF System
+       <a class="navbar-brand d-flex align-items-center" href="{% url 'dashboard' %}">
+           <img src="{% static 'images/ucf-logo.png' %}" alt="UCF"
+                style="width: 34px; height: 34px; border-radius: 50%; margin-right: 8px;">
+           <span style="font-size: 0.95rem; letter-spacing: 1px;">
+                UNIVERSITY COMMUNITY FELLOWSHIP
+           </span>
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
