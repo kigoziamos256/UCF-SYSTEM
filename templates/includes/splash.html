@@ -1,5 +1,5 @@
 {% load static %}
-{# Splash screen – shows on first load, hides after 2 seconds #}
+{# Splash screen – shows on first load, hides after 20 seconds #}
 <div id="ucf-splash" style="
     position: fixed; inset: 0; z-index: 9999;
     background: #6B1F2E;
@@ -24,6 +24,28 @@
               letter-spacing: 1px;">
         Friends for life · Fellowship · Service · Stewardship
     </p>
+
+    <!-- Progress bar showing the 20-second countdown -->
+    <div style="
+        position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
+        width: 200px; height: 3px; background: rgba(255,255,255,0.2);
+        border-radius: 3px; overflow: hidden;
+    ">
+        <div id="ucf-progress" style="
+            height: 100%; width: 0%; background: #C9A227;
+            transition: width 20s linear;
+        "></div>
+    </div>
+
+    <!-- Skip button so users are not stuck for 20 seconds -->
+    <button id="ucf-skip" style="
+        position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+        background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.4);
+        padding: 6px 20px; border-radius: 20px; font-size: 0.8rem;
+        letter-spacing: 1px; cursor: pointer;
+    ">
+        SKIP →
+    </button>
 </div>
 
 <style>
@@ -35,11 +57,27 @@
 </style>
 
 <script>
-    window.addEventListener('load', function () {
+    document.addEventListener('DOMContentLoaded', function () {
         const splash = document.getElementById('ucf-splash');
-        setTimeout(() => {
+        const progress = document.getElementById('ucf-progress');
+        const skipBtn = document.getElementById('ucf-skip');
+
+        // Start the progress bar animation
+        setTimeout(function () {
+            progress.style.width = '100%';
+        }, 50);
+
+        // Auto-hide after 20 seconds
+        const timer = setTimeout(function () {
             splash.style.opacity = '0';
             splash.style.visibility = 'hidden';
-        }, 2000);
+        }, 20000);
+
+        // Allow users to skip the splash
+        skipBtn.addEventListener('click', function () {
+            clearTimeout(timer);
+            splash.style.opacity = '0';
+            splash.style.visibility = 'hidden';
+        });
     });
 </script>
