@@ -1,3 +1,4 @@
+{% load static %}
 {# Splash screen – shows on first load, hides after 2 seconds #}
 <div id="ucf-splash" style="
     position: fixed; inset: 0; z-index: 9999;
@@ -34,7 +35,6 @@
 </style>
 
 <script>
-    // Hide the splash after 2 seconds
     window.addEventListener('load', function () {
         const splash = document.getElementById('ucf-splash');
         setTimeout(() => {
