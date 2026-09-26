@@ -1,17 +1,18 @@
 /* ========================================
-   BRAND COLORS
+   BRAND COLORS — Burgundy Theme
    ======================================== */
 :root {
-    --brand-purple: #570930;
-    --brand-purple-light: #b84ba6;
-    --brand-purple-dark: #4a1d63;
-    --brand-red: #dc3545;
-    --brand-red-dark: #b02a37;
+    --brand-purple: #6B1F2E;        /* Burgundy (main) */
+    --brand-purple-light: #8C3A4A;  /* Lighter burgundy */
+    --brand-purple-dark: #4A0E1C;   /* Deep burgundy */
+    --brand-red: #C8102E;           /* Accent red */
+    --brand-red-dark: #9A0C22;
     --brand-black: #1a1a1a;
     --brand-black-light: #333333;
     --brand-white: #ffffff;
     --brand-gray: #f8f9fa;
     --brand-gray-dark: #6c757d;
+    --brand-gold: #C9A227;          /* Optional gold accent for the tagline */
 }
 
 /* ========================================
