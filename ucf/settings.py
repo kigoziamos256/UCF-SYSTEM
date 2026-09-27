@@ -7,27 +7,39 @@ from pathlib import Path
 from dotenv import load_dotenv
 import dj_database_url
 
-
 load_dotenv()  # only for local development
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# ============================================================
+# BASE PATHS
+# ============================================================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Cloudinary configuration (for persistent media storage)
+# ============================================================
+# CLOUDINARY CONFIGURATION (persistent media storage)
+# ============================================================
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
 
-# Quick-start development settings - unsuitable for production
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fa9i+i4$h4n=-zjbsvh$ujk48lqnf@6@#213&z++m^u(myz+n9')
+# ============================================================
+# SECURITY
+# ============================================================
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-fa9i+i4$h4n=-zjbsvh$ujk48lqnf@6@#213&z++m^u(myz+n9'
+)
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-# ALLOWED_HOSTS: read from environment variable, fallback to localhost
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com').split(',')
+ALLOWED_HOSTS = os.environ.get(
+    'ALLOWED_HOSTS',
+    'localhost,127.0.0.1,.onrender.com'
+).split(',')
 
-# Application definition
+# ============================================================
+# APPLICATIONS
+# ============================================================
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -42,7 +54,9 @@ INSTALLED_APPS = [
     'pwa',
 ]
 
-# Media storage – use Cloudinary for user-uploaded files
+# ============================================================
+# STORAGES (Cloudinary for media, default for static)
+# ============================================================
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
@@ -51,6 +65,10 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
+
+# ============================================================
+# MIDDLEWARE
+# ============================================================
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -64,6 +82,9 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'ucf.urls'
 
+# ============================================================
+# TEMPLATES
+# ============================================================
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -83,10 +104,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ucf.wsgi.application'
 
-# Database - try to use DATABASE_URL if valid, otherwise fallback to SQLite
-import dj_database_url
-import os
-
+# ============================================================
+# DATABASE
+# Uses DATABASE_URL if valid, otherwise falls back to SQLite
+# ============================================================
 database_url = os.environ.get('DATABASE_URL', '').strip()
 
 if database_url:
@@ -112,7 +133,9 @@ else:
         }
     }
 
-# Password validation
+# ============================================================
+# PASSWORD VALIDATION
+# ============================================================
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -120,46 +143,79 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Internationalization
+# ============================================================
+# INTERNATIONALIZATION
+# ============================================================
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Kampala'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+# ============================================================
+# STATIC FILES (CSS, JavaScript, Images)
+# ============================================================
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Media files - local fallback (not used if Cloudinary is active)
+# ============================================================
+# MEDIA FILES (local fallback – not used if Cloudinary is active)
+# ============================================================
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Default primary key field type
+# ============================================================
+# DEFAULT PRIMARY KEY
+# ============================================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Authentication settings
+# ============================================================
+# AUTHENTICATION
+# ============================================================
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = 'login'
 
-# Security settings - CSRF protection for Django Admin
-# Security settings – CSRF and cookies
+# ============================================================
+# CSRF / SESSION / COOKIE SETTINGS
+# Tuned for compatibility with mobile browsers (Safari,
+# Brave, in-app browsers, older Android browsers).
+# ============================================================
 CSRF_TRUSTED_ORIGINS = [
     'https://ucf-system.onrender.com',
-    'http://ucf-system.onrender.com',   # fallback (though your site is HTTPS)
+    'http://ucf-system.onrender.com',
 ]
 
-CSRF_COOKIE_SECURE = True          # send only over HTTPS
-CSRF_COOKIE_HTTPONLY = False       # allow JavaScript to read the cookie (if needed)
-SESSION_COOKIE_SECURE = True       # session cookie only over HTTPS
+# Let JavaScript read the CSRF cookie so it can be injected
+# into every form. Fixes 403 errors on phones that block
+# or don't persist cookies properly.
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_USE_SESSIONS = False
 
+# Session cookie settings
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
 
-# ========== PWA CONFIGURATION ==========
-PWA_APP_NAME = 'UCF Church'
-PWA_APP_DESCRIPTION = "University Christian Fellowship Church Management"
-PWA_APP_THEME_COLOR = '#6f2c91'  # Your brand purple
+# Custom CSRF failure view (friendly error page + logging)
+CSRF_FAILURE_VIEW = 'members.views.custom_csrf_failure'
+
+# ============================================================
+# REVERSE PROXY / HTTPS (Render sits behind a proxy)
+# ============================================================
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+
+# ============================================================
+# PWA CONFIGURATION (University Community Fellowship)
+# ============================================================
+PWA_APP_NAME = 'UCF'
+PWA_APP_DESCRIPTION = "University Community Fellowship — Friends for Life"
+PWA_APP_THEME_COLOR = '#6B1F2E'           # Burgundy
 PWA_APP_BACKGROUND_COLOR = '#ffffff'
 PWA_APP_DISPLAY = 'standalone'
 PWA_APP_START_URL = '/dashboard/'
