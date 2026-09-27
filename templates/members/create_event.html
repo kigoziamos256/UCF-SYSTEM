@@ -1,28 +1,118 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Create Event{% endblock %}
 
 {% block content %}
 
 <div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
 
-    <h2>Create Event</h2>
+            <div class="card shadow">
+                <div class="card-header text-white" style="background-color: var(--brand-purple);">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-plus"></i> Create Event
+                    </h4>
+                </div>
+                <div class="card-body">
 
-    <form method="POST">
-        {% csrf_token %}
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
 
-        <div class="mb-3">
-            {{ form.as_p }}
+                    <form method="POST" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Title *</label>
+                            {{ form.title }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description *</label>
+                            {{ form.description }}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Date & Time *</label>
+                                {{ form.event_date }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Location *</label>
+                                {{ form.location }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Department</label>
+                            {{ form.department }}
+                            <div class="form-text">Optional — leave blank for a general event.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Cover Image</label>
+                            {{ form.cover_image }}
+                            <div class="form-text">Recommended size: 800×400 pixels (JPG or PNG).</div>
+
+                            <!-- Preview -->
+                            <div id="coverPreviewWrap" style="display:none; margin-top:10px;">
+                                <img id="coverPreview" src="#" alt="Cover preview"
+                                     style="max-width: 100%; max-height: 220px;
+                                            border-radius: 8px; border: 1px solid #ddd;">
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary me-md-2">Cancel</a>
+                            <button type="submit" class="btn text-white" style="background-color: var(--brand-purple);">
+                                <i class="bi bi-check2"></i> Create Event
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
         </div>
-
-        <button type="submit" class="btn btn-primary">
-            Create Event
-        </button>
-
-        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
-            Cancel
-        </a>
-
-    </form>
-
+    </div>
 </div>
+
+<script>
+    // Preview the selected cover image
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.querySelector('input[name="cover_image"]');
+        const wrap  = document.getElementById('coverPreviewWrap');
+        const img   = document.getElementById('coverPreview');
+        if (!input) return;
+
+        input.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    img.src = ev.target.result;
+                    wrap.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                wrap.style.display = 'none';
+            }
+        });
+    });
+</script>
 
 {% endblock %}
