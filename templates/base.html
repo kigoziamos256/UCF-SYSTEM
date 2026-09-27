@@ -323,5 +323,33 @@
         });
     }, 5000);
 </script>
+<script>
+    // CSRF token auto-injection (fixes 403 on mobile browsers)
+    (function() {
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const csrfToken = getCookie('csrftoken');
+            if (!csrfToken) return;
+            document.querySelectorAll('form').forEach(function(form) {
+                const method = (form.getAttribute('method') || 'GET').toUpperCase();
+                if (method === 'POST') {
+                    let input = form.querySelector('input[name="csrfmiddlewaretoken"]');
+                    if (!input) {
+                        input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'csrfmiddlewaretoken';
+                        form.appendChild(input);
+                    }
+                    input.value = csrfToken;
+                }
+            });
+        });
+    })();
+</script>
 </body>
 </html>
