@@ -8,6 +8,7 @@ from django.db.models import Q, Sum
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.shortcuts import render
 
 from .models import (
     Event, Member, Duty, Announcement, Notification, Attendance, Department,
@@ -852,3 +853,15 @@ def finance_reconciliation(request):
         'section': 'finance'
     }
     return render(request, 'admin/finance_reconciliation.html', context)
+
+def custom_csrf_failure(request, reason=""):
+    """Custom CSRF failure view with logging."""
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning(
+        f"CSRF failure: {reason} | "
+        f"UA: {request.META.get('HTTP_USER_AGENT', 'unknown')} | "
+        f"Referer: {request.META.get('HTTP_REFERER', 'none')} | "
+        f"Host: {request.META.get('HTTP_HOST', 'none')}"
+    )
+    return render(request, 'csrf_failure.html', {'reason': reason}, status=403)
