@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Bank Reconciliation{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-bank" style="color: var(--brand-purple);"></i> Bank Reconciliation</h2>
+        <a href="{% url 'finance_dashboard' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header text-white" style="background-color: var(--brand-purple);">
+            <h5 class="mb-0">New Reconciliation</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label class="form-label">Bank Name *</label>{{ form.bank_name }}</div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Account Number</label>{{ form.account_number }}</div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Statement Date *</label>{{ form.statement_date }}</div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Statement Balance *</label>{{ form.statement_balance }}</div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Ledger Balance *</label>{{ form.ledger_balance }}</div>
+                    <div class="col-12 mb-3"><label class="form-label">Notes</label>{{ form.notes }}</div>
+                </div>
+                <button type="submit" class="btn text-white" style="background-color: var(--brand-purple);">
+                    <i class="bi bi-check2"></i> Record Reconciliation
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white"><h5 class="mb-0">History</h5></div>
+        <div class="card-body">
+            {% if reconciliations %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead><tr><th>Bank</th><th>Date</th><th>Statement</th><th>Ledger</th><th>Difference</th></tr></thead>
+                        <tbody>
+                            {% for r in reconciliations %}
+                            <tr>
+                                <td>{{ r.bank_name }}</td>
+                                <td>{{ r.statement_date|date:"M d, Y" }}</td>
+                                <td>{{ currency_symbol }}{{ r.statement_balance|floatformat:2 }}</td>
+                                <td>{{ currency_symbol }}{{ r.ledger_balance|floatformat:2 }}</td>
+                                <td>
+                                    {% if r.difference == 0 %}<span class="badge bg-success">Matched</span>
+                                    {% else %}<span class="badge bg-danger">{{ currency_symbol }}{{ r.difference|floatformat:2 }}</span>{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center mb-0">No reconciliations recorded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
