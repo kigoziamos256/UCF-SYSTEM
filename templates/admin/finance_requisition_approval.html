@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Review Requisition{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header text-white" style="background-color: var(--brand-purple);">
+                    <h4 class="mb-0">Review Requisition</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>Title:</strong> {{ requisition.title }}</p>
+                    <p><strong>Requested by:</strong> {{ requisition.requested_by.username }}</p>
+                    <p><strong>Amount:</strong> {{ currency_symbol }}{{ requisition.estimated_amount|floatformat:2 }}</p>
+                    <p><strong>Description:</strong></p>
+                    <p>{{ requisition.description }}</p>
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Reason (required if rejecting)</label>
+                            <textarea name="reason" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="action" value="approve" class="btn btn-success">
+                                <i class="bi bi-check2"></i> Approve
+                            </button>
+                            <button type="submit" name="action" value="reject" class="btn btn-danger">
+                                <i class="bi bi-x-circle"></i> Reject
+                            </button>
+                            <a href="{% url 'finance_requisition' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
