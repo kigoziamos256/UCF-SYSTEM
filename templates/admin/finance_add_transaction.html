@@ -6,15 +6,33 @@
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-md-10">
             <div class="card shadow">
-                <div class="card-header bg-success text-white">
+                <div class="card-header text-white" style="background-color: var(--brand-purple);">
                     <h4 class="mb-0"><i class="bi bi-plus-circle"></i> Record Financial Transaction</h4>
                 </div>
                 <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
-                        
+
+                        <!-- ===== Transaction Core ===== -->
+                        <h6 class="text-uppercase text-muted mb-3">Transaction Details</h6>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Transaction Type *</label>
@@ -25,7 +43,20 @@
                                 {{ form.payment_method }}
                             </div>
                         </div>
-                        
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Income Sub-Type</label>
+                                {{ form.income_sub_type }}
+                                <div class="form-text">For income transactions only (e.g., Tithe, Offertory)</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Expense Sub-Type</label>
+                                {{ form.expense_sub_type }}
+                                <div class="form-text">For expense transactions only (e.g., Rent, Utilities)</div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Amount *</label>
@@ -36,19 +67,20 @@
                                 {{ form.date }}
                             </div>
                         </div>
-                        
+
+                        <hr>
+
+                        <!-- ===== Payer / Vendor ===== -->
+                        <h6 class="text-uppercase text-muted mb-3">Payer / Vendor</h6>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Payer Name *</label>
+                                <label class="form-label">Payer Name</label>
                                 {{ form.payer_name }}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Payer Phone</label>
                                 {{ form.payer_phone }}
                             </div>
-                        </div>
-                        
-                        <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Payer Email</label>
                                 {{ form.payer_email }}
@@ -58,13 +90,21 @@
                                 {{ form.payer_member }}
                                 <div class="form-text">Select if this person is a church member</div>
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Vendor</label>
+                                {{ form.vendor }}
+                                <div class="form-text">For expense transactions</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Invoice Number</label>
+                                {{ form.invoice_number }}
+                            </div>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Description</label>
-                            {{ form.description }}
-                        </div>
-                        
+
+                        <hr>
+
+                        <!-- ===== Payment Details ===== -->
+                        <h6 class="text-uppercase text-muted mb-3">Payment Details</h6>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Reference Number</label>
@@ -72,24 +112,75 @@
                                 <div class="form-text">Transaction ID, Receipt number, etc.</div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Receipt Image</label>
-                                {{ form.receipt_image }}
-                                <div class="form-text">Upload a photo of the receipt (optional)</div>
+                                <label class="form-label">Bank Reference</label>
+                                {{ form.bank_reference }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Due Date</label>
+                                {{ form.due_date }}
+                                <div class="form-text">For unpaid invoices</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Paid Date</label>
+                                {{ form.paid_date }}
+                            </div>
+                            <div class="col-md-6 mb-3 form-check ms-2 mt-2">
+                                {{ form.is_paid }}
+                                <label class="form-check-label" for="id_is_paid">
+                                    Mark as paid
+                                </label>
                             </div>
                         </div>
-                        
+
+                        <hr>
+
+                        <!-- ===== Categorization ===== -->
+                        <h6 class="text-uppercase text-muted mb-3">Categorization</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Income Category</label>
+                                {{ form.income_category }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Expense Category</label>
+                                {{ form.expense_category }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Department</label>
+                                {{ form.department }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Purchase Order Number</label>
+                                {{ form.purchase_order_number }}
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- ===== Description & Receipt ===== -->
+                        <h6 class="text-uppercase text-muted mb-3">Additional Information</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            {{ form.description }}
+                        </div>
                         <div class="mb-3">
                             <label class="form-label">Notes</label>
                             {{ form.notes }}
                         </div>
-                        
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <div class="mb-3">
+                            <label class="form-label">Receipt Image</label>
+                            {{ form.receipt_image }}
+                            <div class="form-text">Upload a photo of the receipt (optional)</div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                             <a href="{% url 'finance_dashboard' %}" class="btn btn-secondary me-md-2">Cancel</a>
-                            <button type="submit" class="btn btn-success">
+                            <button type="submit" class="btn text-white" style="background-color: var(--brand-purple);">
                                 <i class="bi bi-check2"></i> Record Transaction
                             </button>
                         </div>
                     </form>
+
                 </div>
             </div>
         </div>
