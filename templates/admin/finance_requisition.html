@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Expense Requisitions{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-clipboard-check" style="color: var(--brand-purple);"></i> Expense Requisitions</h2>
+        <a href="{% url 'finance_dashboard' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header text-white" style="background-color: var(--brand-purple);">
+            <h5 class="mb-0">Submit New Requisition</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label class="form-label">Title *</label>{{ form.title }}</div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Estimated Amount *</label>{{ form.estimated_amount }}</div>
+                    <div class="col-md-12 mb-3"><label class="form-label">Description *</label>{{ form.description }}</div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Department</label>{{ form.department }}</div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Expense Category</label>{{ form.expense_category }}</div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Vendor</label>{{ form.vendor }}</div>
+                </div>
+                <button type="submit" class="btn text-white" style="background-color: var(--brand-purple);">
+                    <i class="bi bi-send"></i> Submit Requisition
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white"><h5 class="mb-0">All Requisitions</h5></div>
+        <div class="card-body">
+            {% if requisitions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead><tr><th>Title</th><th>Requested By</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                        <tbody>
+                            {% for r in requisitions %}
+                            <tr>
+                                <td>{{ r.title }}</td>
+                                <td>{{ r.requested_by.username }}</td>
+                                <td>{{ currency_symbol }}{{ r.estimated_amount|floatformat:2 }}</td>
+                                <td>
+                                    {% if r.status == 'pending' %}<span class="badge bg-warning text-dark">Pending</span>
+                                    {% elif r.status == 'approved' %}<span class="badge bg-success">Approved</span>
+                                    {% elif r.status == 'rejected' %}<span class="badge bg-danger">Rejected</span>
+                                    {% else %}<span class="badge bg-secondary">{{ r.get_status_display }}</span>{% endif %}
+                                </td>
+                                <td>{{ r.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if r.status == 'pending' %}
+                                        <a href="{% url 'finance_requisition_approve' r.id %}" class="btn btn-sm btn-outline-primary">Review</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center mb-0">No requisitions yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
