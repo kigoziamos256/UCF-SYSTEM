@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Budget Management{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-wallet" style="color: var(--brand-purple);"></i> Budget Management</h2>
+        <a href="{% url 'finance_dashboard' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header text-white" style="background-color: var(--brand-purple);">
+            <h5 class="mb-0">Create New Budget</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-4 mb-3"><label class="form-label">Department</label>{{ form.department }}</div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Income Category</label>{{ form.income_category }}</div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Expense Category</label>{{ form.expense_category }}</div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Frequency</label>{{ form.frequency }}</div>
+                    <div class="col-md-2 mb-3"><label class="form-label">Month</label>{{ form.period_month }}</div>
+                    <div class="col-md-2 mb-3"><label class="form-label">Year</label>{{ form.period_year }}</div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Budgeted Amount</label>{{ form.budgeted_amount }}</div>
+                </div>
+                <button type="submit" class="btn text-white" style="background-color: var(--brand-purple);">
+                    <i class="bi bi-check2"></i> Create Budget
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white"><h5 class="mb-0">Existing Budgets</h5></div>
+        <div class="card-body">
+            {% if budgets %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead><tr><th>Department</th><th>Category</th><th>Period</th><th>Budgeted</th><th>Actual</th><th>Status</th></tr></thead>
+                        <tbody>
+                            {% for b in budgets %}
+                            <tr>
+                                <td>{{ b.get_department_display }}</td>
+                                <td>{{ b.category_name }}</td>
+                                <td>{{ b.get_period_display }}</td>
+                                <td>{{ currency_symbol }}{{ b.budgeted_amount|floatformat:2 }}</td>
+                                <td>{{ currency_symbol }}{{ b.get_actual_amount|floatformat:2 }}</td>
+                                <td>
+                                    {% with status=b.get_status %}
+                                        {% if status == 'green' %}<span class="badge bg-success">🟢 OK</span>
+                                        {% elif status == 'yellow' %}<span class="badge bg-warning text-dark">🟡 Watch</span>
+                                        {% else %}<span class="badge bg-danger">🔴 Alert</span>{% endif %}
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center mb-0">No budgets created yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
