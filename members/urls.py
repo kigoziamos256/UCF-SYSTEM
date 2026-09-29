@@ -81,4 +81,7 @@ urlpatterns = [
     # ==================== NOTIFICATIONS API ====================
     path('api/notifications/', views.notifications_api, name='notifications_api'),
     path('api/notifications/mark-all/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
+
+    # Duty completion
+    path('duty/<int:duty_id>/complete/', views.mark_duty_complete, name='mark_duty_complete'),
 ]
