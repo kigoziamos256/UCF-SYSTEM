@@ -22,3 +22,4 @@ whitenoise==6.12.0
 psycopg2-binary
 django-pwa
 pillow-heif
+qrcode[pil]
