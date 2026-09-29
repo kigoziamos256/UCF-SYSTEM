@@ -1331,3 +1331,9 @@ def complete_profile_view(request):
         'form': form,
         'member': member,
     })
+
+# ==================== HELP ====================
+
+def help_view(request):
+    """Public help page explaining how to use the system."""
+    return render(request, 'help.html')
