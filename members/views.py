@@ -14,6 +14,7 @@ from django.shortcuts import render
 from .forms import CompleteProfileForm
 from django.core.paginator import Paginator
 
+
 import qrcode
 import io
 import base64
