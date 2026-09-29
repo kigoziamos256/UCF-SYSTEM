@@ -68,6 +68,8 @@ class Member(models.Model):
         else:
             return self.user.username[:2].upper()
 
+    avatar_url = models.URLField(blank=True, help_text="Temporary Google avatar URL")
+
 
 # ==================== EVENT ====================
 class Event(models.Model):
