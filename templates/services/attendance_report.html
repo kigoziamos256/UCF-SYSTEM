@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Report{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 style="color: var(--brand-purple);">
+            <i class="bi bi-clipboard-data"></i> Attendance Report
+        </h2>
+        <div>
+            <a href="{% url 'attendance_export_csv' %}?from={{ from_date }}&to={{ to_date }}&service={{ selected_service }}&session={{ selected_session }}"
+               class="btn btn-success">
+                <i class="bi bi-filetype-csv"></i> Export CSV
+            </a>
+            <a href="{% url 'entrance_qr' %}" class="btn btn-outline-primary">
+                <i class="bi bi-qr-code"></i> Entrance QR
+            </a>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ summary.total }}</h3>
+                    <small>Total Records</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white" style="background-color: var(--brand-purple);">
+                <div class="card-body text-center">
+                    <h3>{{ summary.unique_members }}</h3>
+                    <small>Unique Members</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>{{ summary.first }}</h3>
+                    <small>First</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>{{ summary.second }}</h3>
+                    <small>Second</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-secondary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ summary.midweek }}</h3>
+                    <small>Mid-Week</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-2">
+                <div class="col-md-3">
+                    <label class="form-label small">From</label>
+                    <input type="date" name="from" value="{{ from_date }}" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">To</label>
+                    <input type="date" name="to" value="{{ to_date }}" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">Service</label>
+                    <select name="service" class="form-select">
+                        <option value="">All Services</option>
+                        {% for s in schedules %}
+                            <option value="{{ s.id }}" {% if selected_service == s.id|stringformat:"s" %}selected{% endif %}>{{ s.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small">Session</label>
+                    <select name="session" class="form-select">
+                        <option value="">All</option>
+                        <option value="first" {% if selected_session == 'first' %}selected{% endif %}>First</option>
+                        <option value="second" {% if selected_session == 'second' %}selected{% endif %}>Second</option>
+                        <option value="midweek" {% if selected_session == 'midweek' %}selected{% endif %}>Mid-Week</option>
+                    </select>
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn text-white w-100" style="background-color: var(--brand-purple);">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+        <div class="card-body">
+            {% if attendances %}
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Service</th>
+                            <th>Session</th>
+                            <th>Member</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Check-in</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in attendances %}
+                        <tr>
+                            <td>{{ a.service_date|date:"M d, Y" }}</td>
+                            <td>{{ a.service.label }}</td>
+                            <td>
+                                {% if a.session == 'first' %}<span class="badge bg-info">First</span>
+                                {% elif a.session == 'second' %}<span class="badge bg-warning text-dark">Second</span>
+                                {% elif a.session == 'midweek' %}<span class="badge bg-secondary">Mid-Week</span>
+                                {% else %}<span class="badge bg-light text-dark">—</span>{% endif %}
+                            </td>
+                            <td>{{ a.member.user.get_full_name|default:a.member.user.username }}</td>
+                            <td>{{ a.member.user.email }}</td>
+                            <td>{{ a.member.phone_number|default:"—" }}</td>
+                            <td>{{ a.check_in_time|date:"H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <p class="text-muted text-center mb-0">No attendance records found for these filters.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
