@@ -18,6 +18,8 @@ from datetime import datetime, time, date
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
+from django.http import HttpResponse
 
 from .models import (
     Event, Member, Duty, Announcement, Notification, Attendance, Department,
