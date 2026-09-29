@@ -1,25 +1,127 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ announcement.title }}</title>
-    <link rel="stylesheet" href="{% static 'styles.css' %}">
-</head>
-<body>
-    <header>
-        <h1>{{ announcement.title }}</h1>
-        <nav>
-            <a href="{% url 'dashboard' %}">Dashboard</a>
-        </nav>
-    </header>
+{% extends 'base.html' %}
+{% load static %}
+{% load profile_tags %}
 
-    <main>
-        <p><strong>Date Posted:</strong> {{ announcement.date_posted|date:"M d, Y H:i" }}</p>
-        <p>{{ announcement.content }}</p>
-    </main>
+{% block title %}{{ announcement.title }}{% endblock %}
 
-    <footer>
-        <p>&copy; {{ now.year }} Church Management System</p>
-    </footer>
-</body>
-</html>
+{% block extra_css %}
+<style>
+    .detail-header {
+        background: linear-gradient(135deg, var(--brand-purple) 0%, var(--brand-purple-dark) 100%);
+        color: white;
+        border-radius: 12px 12px 0 0;
+        padding: 2rem 2rem 1.5rem;
+    }
+    .detail-header h1 {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    .detail-header .meta {
+        opacity: 0.9;
+        font-size: 0.9rem;
+    }
+    .detail-body {
+        padding: 2rem;
+        font-size: 1.05rem;
+        line-height: 1.8;
+        color: #333;
+    }
+    .detail-body p {
+        margin-bottom: 1.2rem;
+    }
+    .important-banner {
+        background: linear-gradient(90deg, #dc3545 0%, #b02a37 100%);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+
+            <div class="card shadow border-0">
+
+                <!-- Header -->
+                <div class="detail-header">
+                    <h1>{{ announcement.title }}</h1>
+                    <div class="meta d-flex align-items-center flex-wrap gap-3">
+                        <span>
+                            <i class="bi bi-person-circle"></i>
+                            {{ announcement.created_by.get_full_name|default:announcement.created_by.username }}
+                        </span>
+                        <span>
+                            <i class="bi bi-clock"></i>
+                            {{ announcement.date_posted|date:"F d, Y · H:i" }}
+                        </span>
+                        {% if announcement.department %}
+                        <span>
+                            <i class="bi bi-building"></i>
+                            {{ announcement.department.name }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Important banner -->
+                {% if announcement.is_important %}
+                <div class="important-banner">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    Important Announcement
+                </div>
+                {% endif %}
+
+                <!-- Body -->
+                <div class="detail-body">
+                    <p class="fw-semibold" style="color: var(--brand-purple);">
+                        {{ announcement.message }}
+                    </p>
+
+                    {% if announcement.content %}
+                    <hr class="my-4">
+                    <div>
+                        {{ announcement.content|linebreaks }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Author footer -->
+                <div class="card-footer bg-light d-flex align-items-center">
+                    {% profile_picture announcement.created_by 45 'me-3' %}
+                    <div>
+                        <strong>{{ announcement.created_by.get_full_name|default:announcement.created_by.username }}</strong>
+                        <div class="small text-muted">
+                            Posted {{ announcement.date_posted|timesince }} ago
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'announcements' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> All Announcements
+                </a>
+
+                {% if user.member.role == 'admin' or user.member.role == 'leader' %}
+                <a href="{% url 'create_announcement' %}"
+                   class="btn text-white"
+                   style="background-color: var(--brand-purple);">
+                    <i class="bi bi-plus-circle"></i> New Announcement
+                </a>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
