@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sunday Service{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h2 class="text-center mb-4" style="color: var(--brand-purple);">
+        <i class="bi bi-sunrise"></i> Sunday Service
+    </h2>
+
+    <!-- First Service -->
+    <div class="row mb-5">
+        <div class="col-md-6">
+            {% if flyer_first and flyer_first.flyer_image %}
+                <img src="{{ flyer_first.flyer_image.url }}" class="img-fluid rounded shadow"
+                     alt="First Service Flyer" style="width: 100%;">
+            {% else %}
+                <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                     style="height: 400px;">
+                    <span class="text-muted">Flyer coming soon</span>
+                </div>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <h3 style="color: var(--brand-purple);">First Service</h3>
+            <p class="lead">8:30 AM — 10:00 AM</p>
+
+            {% if flyer_first %}
+                <h5>{{ flyer_first.title }}</h5>
+                <p>{{ flyer_first.description }}</p>
+                {% if flyer_first.youtube_live_url %}
+                    <a href="{{ flyer_first.youtube_live_url }}" target="_blank"
+                       class="btn btn-danger mb-2">
+                        <i class="bi bi-youtube"></i> Watch Live on YouTube
+                    </a>
+                {% endif %}
+            {% endif %}
+
+            <div class="mt-3">
+                <a href="{% url 'scanner' %}" class="btn text-white" style="background-color: var(--brand-purple);">
+                    <i class="bi bi-qr-code-scan"></i> Scan Attendance
+                </a>
+                <a href="{% url 'guest_attendance' %}?service=sunday_first" class="btn btn-outline-primary">
+                    <i class="bi bi-person-plus"></i> I'm New — Register
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Service -->
+    <div class="row mb-5">
+        <div class="col-md-6 order-md-2">
+            {% if flyer_second and flyer_second.flyer_image %}
+                <img src="{{ flyer_second.flyer_image.url }}" class="img-fluid rounded shadow"
+                     alt="Second Service Flyer" style="width: 100%;">
+            {% else %}
+                <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                     style="height: 400px;">
+                    <span class="text-muted">Flyer coming soon</span>
+                </div>
+            {% endif %}
+        </div>
+        <div class="col-md-6 order-md-1">
+            <h3 style="color: var(--brand-purple);">Second Service</h3>
+            <p class="lead">11:00 AM — 1:00 PM</p>
+
+            {% if flyer_second %}
+                <h5>{{ flyer_second.title }}</h5>
+                <p>{{ flyer_second.description }}</p>
+                {% if flyer_second.youtube_live_url %}
+                    <a href="{{ flyer_second.youtube_live_url }}" target="_blank"
+                       class="btn btn-danger mb-2">
+                        <i class="bi bi-youtube"></i> Watch Live on YouTube
+                    </a>
+                {% endif %}
+            {% endif %}
+
+            <div class="mt-3">
+                <a href="{% url 'scanner' %}" class="btn text-white" style="background-color: var(--brand-purple);">
+                    <i class="bi bi-qr-code-scan"></i> Scan Attendance
+                </a>
+                <a href="{% url 'guest_attendance' %}?service=sunday_second" class="btn btn-outline-primary">
+                    <i class="bi bi-person-plus"></i> I'm New — Register
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+</div>
+{% endblock %}
