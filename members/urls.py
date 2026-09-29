@@ -8,7 +8,6 @@ urlpatterns = [
 
     # ==================== AUTH ====================
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
-    path('logout/', views.custom_logout, name='logout'),
     path('register/', views.register_member, name='register'),
     path('complete-profile/', views.complete_profile_view, name='complete_profile'),
 
