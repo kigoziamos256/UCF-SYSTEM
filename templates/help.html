@@ -1,0 +1,482 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Help & Guide{% endblock %}
+
+{% block extra_css %}
+<style>
+    .help-hero {
+        background: linear-gradient(135deg, var(--brand-purple) 0%, var(--brand-purple-dark) 100%);
+        color: white;
+        padding: 3rem 2rem;
+        border-radius: 12px;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .help-hero h1 {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    .help-hero p {
+        opacity: 0.9;
+        margin-bottom: 0;
+    }
+    .help-section {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.75rem;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border-left: 4px solid var(--brand-purple);
+    }
+    .help-section h4 {
+        color: var(--brand-purple);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .help-section h4 i {
+        font-size: 1.4rem;
+    }
+    .help-step {
+        display: flex;
+        gap: 0.75rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .help-step:last-child {
+        border-bottom: none;
+    }
+    .help-step .step-num {
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+        background: var(--brand-purple);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .help-step .step-text {
+        flex-grow: 1;
+        padding-top: 3px;
+    }
+    .quick-nav {
+        position: sticky;
+        top: 1rem;
+    }
+    .quick-nav .list-group-item {
+        border: none;
+        border-left: 3px solid transparent;
+        padding: 0.6rem 1rem;
+        color: #333;
+        font-size: 0.92rem;
+        border-radius: 0;
+    }
+    .quick-nav .list-group-item:hover {
+        background-color: rgba(107,31,46,0.05);
+        border-left-color: var(--brand-purple);
+        color: var(--brand-purple);
+    }
+    .tip-box {
+        background: rgba(201,162,39,0.1);
+        border-left: 4px solid var(--brand-gold);
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        margin-top: 0.75rem;
+    }
+    .help-section ul {
+        padding-left: 1.2rem;
+    }
+    .help-section ul li {
+        margin-bottom: 0.4rem;
+    }
+    @media (max-width: 768px) {
+        .help-hero {
+            padding: 2rem 1.25rem;
+        }
+        .help-hero h1 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <!-- Hero -->
+    <div class="help-hero">
+        <h1><i class="bi bi-question-circle"></i> Help & Guide</h1>
+        <p>Everything you need to know about using the UCF system</p>
+    </div>
+
+    <div class="row">
+        <!-- Quick Navigation (Sidebar) -->
+        <div class="col-lg-3 mb-4">
+            <div class="quick-nav">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0" style="color: var(--brand-purple);">
+                            <i class="bi bi-list-ul"></i> Quick Links
+                        </h6>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="#getting-started" class="list-group-item">
+                            <i class="bi bi-play-circle"></i> Getting Started
+                        </a>
+                        <a href="#signup" class="list-group-item">
+                            <i class="bi bi-person-plus"></i> Signing Up
+                        </a>
+                        <a href="#google-login" class="list-group-item">
+                            <i class="bi bi-google"></i> Google Sign-In
+                        </a>
+                        <a href="#profile" class="list-group-item">
+                            <i class="bi bi-person-circle"></i> Your Profile
+                        </a>
+                        <a href="#attendance" class="list-group-item">
+                            <i class="bi bi-qr-code"></i> Marking Attendance
+                        </a>
+                        <a href="#services" class="list-group-item">
+                            <i class="bi bi-house-heart"></i> Services
+                        </a>
+                        <a href="#events" class="list-group-item">
+                            <i class="bi bi-calendar-event"></i> Events
+                        </a>
+                        <a href="#duties" class="list-group-item">
+                            <i class="bi bi-check2-circle"></i> Duties
+                        </a>
+                        <a href="#notifications" class="list-group-item">
+                            <i class="bi bi-bell"></i> Notifications
+                        </a>
+                        <a href="#install-app" class="list-group-item">
+                            <i class="bi bi-phone"></i> Install as App
+                        </a>
+                        <a href="#leaders" class="list-group-item">
+                            <i class="bi bi-shield-check"></i> For Leaders & Admins
+                        </a>
+                        <a href="#troubleshooting" class="list-group-item">
+                            <i class="bi bi-tools"></i> Troubleshooting
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9">
+
+            <!-- Getting Started -->
+            <div class="help-section" id="getting-started">
+                <h4><i class="bi bi-play-circle"></i> Getting Started</h4>
+                <p>Welcome to University Community Fellowship's online system. This platform lets you:</p>
+                <ul>
+                    <li>Mark your attendance at services</li>
+                    <li>View church events and announcements</li>
+                    <li>Track your duties</li>
+                    <li>Update your profile picture</li>
+                    <li>Watch live streams on YouTube</li>
+                </ul>
+                <div class="tip-box">
+                    <i class="bi bi-lightbulb"></i>
+                    <strong>Tip:</strong> You can install this as an app on your phone — see the
+                    <a href="#install-app">Install as App</a> section below.
+                </div>
+            </div>
+
+            <!-- Signing Up -->
+            <div class="help-section" id="signup">
+                <h4><i class="bi bi-person-plus"></i> Signing Up (New Members)</h4>
+
+                <div class="help-step">
+                    <div class="step-num">1</div>
+                    <div class="step-text">
+                        Go to <strong>Register</strong> from the top menu (or tap
+                        <em>Don't have an account? Register</em> on the login page).
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="step-num">2</div>
+                    <div class="step-text">
+                        Enter your <strong>username</strong>, <strong>email</strong>, and a
+                        <strong>password</strong> (minimum 8 characters).
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="step-num">3</div>
+                    <div class="step-text">
+                        Choose your <strong>department</strong> (e.g., Worship, Youth, Choir).
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="step-num">4</div>
+                    <div class="step-text">
+                        Optionally add a <strong>phone number</strong> and
+                        <strong>profile picture</strong>.
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="step-num">5</div>
+                    <div class="step-text">
+                        Tap <strong>Register</strong>. You'll be logged in automatically.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Google Sign-In -->
+            <div class="help-section" id="google-login">
+                <h4><i class="bi bi-google"></i> Signing In with Google</h4>
+                <p>Skip the form entirely — use your Google account:</p>
+
+                <div class="help-step">
+                    <div class="step-num">1</div>
+                    <div class="step-text">
+                        On the login page, click <strong>Sign in with Google</strong>.
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="step-num">2</div>
+                    <div class="step-text">
+                        Choose your Google account.
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="step-num">3</div>
+                    <div class="step-text">
+                        You'll be asked to pick a <strong>department</strong> and optionally
+                        upload a picture. Your Google photo will be used if you don't upload one.
+                    </div>
+                </div>
+                <div class="tip-box">
+                    <i class="bi bi-shield-lock"></i>
+                    <strong>Note:</strong> We never see your Google password.
+                    We only get your name, email, and photo.
+                </div>
+            </div>
+
+            <!-- Profile -->
+            <div class="help-section" id="profile">
+                <h4><i class="bi bi-person-circle"></i> Your Profile</h4>
+                <p>Access it via the dropdown at the top right → <strong>My Profile</strong>.</p>
+
+                <p>You can:</p>
+                <ul>
+                    <li>Update your <strong>profile picture</strong> (camera icon over the photo)</li>
+                    <li>See your <strong>upcoming events</strong> and <strong>pending duties</strong></li>
+                    <li>View your <strong>stats</strong> (events attended, duties completed)</li>
+                </ul>
+
+                <div class="tip-box">
+                    <i class="bi bi-camera"></i>
+                    <strong>iPhone users:</strong> You can take a photo or choose from
+                    your library. HEIC photos are converted automatically.
+                </div>
+            </div>
+
+            <!-- Attendance -->
+            <div class="help-section" id="attendance">
+                <h4><i class="bi bi-qr-code"></i> Marking Your Attendance</h4>
+                <p>There are two ways to mark attendance:</p>
+
+                <h6 class="mt-3" style="color: var(--brand-purple);">
+                    Option A — Scan the QR code at the entrance
+                </h6>
+                <div class="help-step">
+                    <div class="step-num">1</div>
+                    <div class="step-text">
+                        Open your phone's <strong>camera</strong> (no special app needed).
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="step-num">2</div>
+                    <div class="step-text">
+                        Point it at the UCF poster at the church entrance.
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="step-num">3</div>
+                    <div class="step-text">
+                        Tap the link that appears — it opens the UCF registration page.
+                    </div>
+                </div>
+                <div class="help-step">
+                    <div class="step-num">4</div>
+                    <div class="step-text">
+                        Fill in your name + email → tap <strong>Record My Attendance</strong>.
+                        Done!
+                    </div>
+                </div>
+
+                <h6 class="mt-3" style="color: var(--brand-purple);">
+                    Option B — Show your personal QR code
+                </h6>
+                <p>Get your personal QR from
+                    <strong>Services → My Attendance QR</strong> in the menu.
+                    Show it to a leader at the door and they'll scan it.</p>
+
+                <div class="tip-box">
+                    <i class="bi bi-info-circle"></i>
+                    If you're logged in already, the system knows you. If not, your
+                    email links you to your account automatically.
+                </div>
+            </div>
+
+            <!-- Services -->
+            <div class="help-section" id="services">
+                <h4><i class="bi bi-house-heart"></i> Services (Sunday & Mid-Week)</h4>
+                <p>From the <strong>Services</strong> dropdown, you can view:</p>
+                <ul>
+                    <li><strong>Sunday Service</strong> — First service (8:30–10 AM) and Second service (11 AM–1 PM), with flyers and YouTube live links</li>
+                    <li><strong>Mid-Week Service</strong> — Wednesday (6–8 PM)</li>
+                    <li><strong>My Attendance QR</strong> — your personal code</li>
+                </ul>
+                <div class="tip-box">
+                    <i class="bi bi-youtube"></i>
+                    Tap the red <strong>Watch Live on YouTube</strong> button to open
+                    the live stream in your browser.
+                </div>
+            </div>
+
+            <!-- Events -->
+            <div class="help-section" id="events">
+                <h4><i class="bi bi-calendar-event"></i> Events</h4>
+                <p>All church events are listed in the <strong>Calendar</strong> section.</p>
+                <ul>
+                    <li>Tap any event to see full details, cover image, and location</li>
+                    <li>Press <strong>Join Event</strong> to RSVP — your name will be listed as an attendee</li>
+                    <li>You can unjoin later by pressing <strong>Cancel Attendance</strong></li>
+                </ul>
+            </div>
+
+            <!-- Duties -->
+            <div class="help-section" id="duties">
+                <h4><i class="bi bi-check2-circle"></i> Duties</h4>
+                <p>If a leader assigns you a duty (e.g., ushering, cleaning), you'll see it on your dashboard under <strong>My Pending Duties</strong>.</p>
+                <ul>
+                    <li>Each duty has a title, description, and due date</li>
+                    <li>Once you finish it, tap the duty → mark as completed</li>
+                    <li>You'll receive a notification when a new duty is assigned</li>
+                </ul>
+            </div>
+
+            <!-- Notifications -->
+            <div class="help-section" id="notifications">
+                <h4><i class="bi bi-bell"></i> Notifications</h4>
+                <p>The bell icon at the top right shows new alerts about:</p>
+                <ul>
+                    <li>New events you might want to join</li>
+                    <li>Duties assigned to you</li>
+                    <li>New announcements</li>
+                </ul>
+                <p>Tap any notification to mark it as read. A red badge shows unread count.</p>
+            </div>
+
+            <!-- Install as App -->
+            <div class="help-section" id="install-app">
+                <h4><i class="bi bi-phone"></i> Install as an App</h4>
+
+                <h6 class="mt-3" style="color: var(--brand-purple);">On Android (Chrome)</h6>
+                <div class="help-step">
+                    <div class="step-num">1</div>
+                    <div class="step-text">Open the site in Chrome.</div>
+                </div>
+                <div class="help-step">
+                    <div class="step-num">2</div>
+                    <div class="step-text">Tap the ⋮ menu → <strong>Install app</strong> or <strong>Add to Home screen</strong>.</div>
+                </div>
+
+                <h6 class="mt-3" style="color: var(--brand-purple);">On iPhone (Safari)</h6>
+                <div class="help-step">
+                    <div class="step-num">1</div>
+                    <div class="step-text">Open the site in Safari.</div>
+                </div>
+                <div class="help-step">
+                    <div class="step-num">2</div>
+                    <div class="step-text">Tap the <strong>Share</strong> icon → <strong>Add to Home Screen</strong> → <strong>Add</strong>.</div>
+                </div>
+
+                <h6 class="mt-3" style="color: var(--brand-purple);">On Desktop (Chrome/Edge)</h6>
+                <div class="help-step">
+                    <div class="step-num">1</div>
+                    <div class="step-text">Look for the <strong>install icon</strong> in the address bar (a small monitor with a down arrow).</div>
+                </div>
+                <div class="help-step">
+                    <div class="step-num">2</div>
+                    <div class="step-text">Click it → <strong>Install</strong>.</div>
+                </div>
+
+                <div class="tip-box">
+                    <i class="bi bi-stars"></i>
+                    The app will open full-screen with its own icon — just like a
+                    real app store app, but no download needed.
+                </div>
+            </div>
+
+            <!-- For Leaders & Admins -->
+            <div class="help-section" id="leaders">
+                <h4><i class="bi bi-shield-check"></i> For Leaders & Admins</h4>
+
+                <h6 class="mt-2" style="color: var(--brand-purple);">Posting Flyers</h6>
+                <p>Admin menu → <strong>Upload Service Flyer</strong>. Add the flyer image and the YouTube live stream link.</p>
+
+                <h6 class="mt-3" style="color: var(--brand-purple);">Printing Entrance QR Codes</h6>
+                <p>Admin menu → <strong>Entrance QR Codes</strong>. Download the PNG and print it on A4 for the church entrance.</p>
+
+                <h6 class="mt-3" style="color: var(--brand-purple);">Attendance Reports</h6>
+                <p>Admin menu → <strong>Attendance Report</strong>. Filter by date/service, then click <strong>Export CSV</strong> to open in Excel.</p>
+
+                <h6 class="mt-3" style="color: var(--brand-purple);">Managing Finance</h6>
+                <p>Admin menu → <strong>Finance Department</strong> to record tithes, offerings, expenses, budgets, and requisitions.</p>
+            </div>
+
+            <!-- Troubleshooting -->
+            <div class="help-section" id="troubleshooting">
+                <h4><i class="bi bi-tools"></i> Troubleshooting</h4>
+
+                <h6 class="mt-2" style="color: var(--brand-purple);">
+                    "Session Expired" or "Forbidden (403)"
+                </h6>
+                <p>This usually means cookies were blocked. Try:</p>
+                <ul>
+                    <li>Reload the page (Ctrl + Shift + R on desktop)</li>
+                    <li>Open the site in a normal browser tab, not WhatsApp's built-in browser</li>
+                    <li>Clear cookies for the site and log in again</li>
+                </ul>
+
+                <h6 class="mt-3" style="color: var(--brand-purple);">
+                    "Site can't be reached" on my phone
+                </h6>
+                <p>Check your internet connection. If the issue persists, wait 30 seconds and reload — Render's free tier sleeps after inactivity.</p>
+
+                <h6 class="mt-3" style="color: var(--brand-purple);">
+                    Photo upload fails on iPhone
+                </h6>
+                <p>Make sure the photo is under 15 MB. HEIC files are converted automatically — no action needed.</p>
+
+                <h6 class="mt-3" style="color: var(--brand-purple);">
+                    Can't log in with Google
+                </h6>
+                <p>Make sure you're using the same Google account you signed up with. If it's your first time, use <strong>Sign in with Google</strong> on the login page.</p>
+
+                <div class="tip-box mt-3">
+                    <i class="bi bi-envelope"></i>
+                    Still stuck? Contact your church admin or WhatsApp the UCF media team.
+                </div>
+            </div>
+
+            <!-- Back to dashboard -->
+            <div class="mt-4">
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
