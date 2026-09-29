@@ -351,8 +351,35 @@ def assign_duty(request):
         if form.is_valid():
             duty = form.save(commit=False)
             duty.created_by = request.user
+
+            # ── Smart department fallback ──
+            if not duty.department:
+                # 1. Try the assigned member's department
+                try:
+                    duty.department = duty.assigned_to.member.department
+                except Exception:
+                    duty.department = None
+
+                # 2. If still empty, try the creator's department
+                if not duty.department:
+                    duty.department = getattr(request.user.member, 'department', None)
+
+                # 3. If STILL empty, try the very first department available
+                if not duty.department:
+                    duty.department = Department.objects.first()
+
+                # 4. If there are no departments at all, we cannot save
+                if not duty.department:
+                    messages.error(
+                        request,
+                        "Cannot assign duty: no department exists yet. "
+                        "Please create a department first."
+                    )
+                    return render(request, 'members/assign_duty.html', {'form': form})
+
             duty.save()
 
+            # Notify assigned member
             try:
                 recipient = Member.objects.get(user=duty.assigned_to)
                 Notification.objects.create(
@@ -362,7 +389,10 @@ def assign_duty(request):
                     message=f"You have been assigned a new duty: '{duty.title}' due on {duty.duty_date.strftime('%B %d, %Y')}.",
                     duty=duty
                 )
-                messages.success(request, f"Duty assigned to {duty.assigned_to.get_full_name() or duty.assigned_to.username}!")
+                messages.success(
+                    request,
+                    f"Duty assigned to {duty.assigned_to.get_full_name() or duty.assigned_to.username}!"
+                )
             except Member.DoesNotExist:
                 messages.warning(request, "Duty assigned but notification could not be sent.")
 
