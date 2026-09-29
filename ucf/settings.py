@@ -178,7 +178,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # timeouts and "file too large" errors on mobile uploads.
 # ============================================================
 DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024    # 20 MB
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024    # 10 MB (above this, Django uses a temp file)
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024    # 10 MB
 
 # ============================================================
 # DEFAULT PRIMARY KEY
@@ -189,8 +189,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # AUTHENTICATION
 # ============================================================
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/dashboard/'
+LOGIN_REDIRECT_URL = '/dashboard/'          # regular login → dashboard
 LOGOUT_REDIRECT_URL = 'login'
+
+# Allauth-specific redirects (only used for first-time signups)
+ACCOUNT_SIGNUP_REDIRECT_URL = '/members/complete-profile/'
+SOCIALACCOUNT_SIGNUP_REDIRECT_URL = '/members/complete-profile/'
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+SITE_ID = 1
 
 # ============================================================
 # CSRF / SESSION / COOKIE SETTINGS
@@ -202,20 +213,15 @@ CSRF_TRUSTED_ORIGINS = [
     'http://ucf-system.onrender.com',
 ]
 
-# Let JavaScript read the CSRF cookie so it can be injected
-# into every form. Fixes 403 errors on phones that block
-# or don't persist cookies properly.
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_USE_SESSIONS = False
 
-# Session cookie settings
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 
-# Custom CSRF failure view (friendly error page + logging)
 CSRF_FAILURE_VIEW = 'members.views.custom_csrf_failure'
 
 # ============================================================
@@ -230,7 +236,7 @@ USE_X_FORWARDED_PORT = True
 # ============================================================
 PWA_APP_NAME = 'UCF'
 PWA_APP_DESCRIPTION = "University Community Fellowship — Friends for Life"
-PWA_APP_THEME_COLOR = '#6B1F2E'           # Burgundy
+PWA_APP_THEME_COLOR = '#6B1F2E'
 PWA_APP_BACKGROUND_COLOR = '#ffffff'
 PWA_APP_DISPLAY = 'standalone'
 PWA_APP_START_URL = '/dashboard/'
@@ -267,13 +273,6 @@ PWA_APP_SPLASH_SCREEN = [
 PWA_APP_DIR = 'ltr'
 PWA_APP_LANG = 'en'
 
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
-]
-
-SITE_ID = 1
-
 # ============================================================
 # DJANGO-ALLAUTH CONFIGURATION
 # ============================================================
@@ -285,16 +284,13 @@ SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 
-# Where to send user after successful social login
-LOGIN_REDIRECT_URL = '/members/complete-profile/'
-
 # Google provider configuration
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': ['profile', 'email'],
         'AUTH_PARAMS': {'access_type': 'online'},
         'OAUTH_PKCE_ENABLED': True,
-        'FETCH_USERINFO': True,       # ensures we get the avatar URL
+        'FETCH_USERINFO': True,
         'EMAIL_AUTHENTICATION': True,
         'VERIFIED_EMAIL': True,
     }
@@ -303,6 +299,9 @@ SOCIALACCOUNT_PROVIDERS = {
 # Custom adapter to auto-populate Member + profile picture
 SOCIALACCOUNT_ADAPTER = 'members.adapters.UCFSocialAccountAdapter'
 
-# Templates (we'll create these)
-ACCOUNT_LOGIN_TEMPLATE = 'account/login.html'
+# Let allauth use our own login template
+ACCOUNT_LOGIN_TEMPLATE = 'login.html'
+ACCOUNT_LOGOUT_REDIRECT_URL = '/login/'
+
+# Social login button on GET (safer and clearer)
 SOCIALACCOUNT_LOGIN_ON_GET = True
