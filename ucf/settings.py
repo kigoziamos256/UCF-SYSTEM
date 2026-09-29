@@ -21,6 +21,7 @@ CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+    'TIMEOUT': 300,   # 5 minutes – allows slow mobile uploads
 }
 
 # ============================================================
@@ -164,6 +165,14 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # ============================================================
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# ============================================================
+# UPLOAD SIZE LIMITS
+# iPhone photos can be 5–15MB. These settings prevent
+# timeouts and "file too large" errors on mobile uploads.
+# ============================================================
+DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024    # 20 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024    # 10 MB (above this, Django uses a temp file)
 
 # ============================================================
 # DEFAULT PRIMARY KEY
