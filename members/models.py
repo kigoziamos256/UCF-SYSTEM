@@ -29,11 +29,13 @@ class Member(models.Model):
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='members')
     role = models.CharField(max_length=50, choices=ROLE_CHOICES, default='member')
 
+    # Profile picture — HEIC/HEIF files are auto-converted to JPEG
+    # (requires pillow-heif which is registered in members/apps.py)
     profile_picture = ProcessedImageField(
         upload_to='profile_pics/',
-        processors=[ResizeToFill(300, 300)],
+        processors=[ResizeToFill(400, 400)],   # slightly larger for retina
         format='JPEG',
-        options={'quality': 90},
+        options={'quality': 85, 'optimize': True},   # optimized for web
         null=True,
         blank=True
     )
@@ -54,7 +56,7 @@ class Member(models.Model):
         if self.profile_picture and hasattr(self.profile_picture, 'url') and self.profile_picture.name:
             return self.profile_picture.url
         initials = self.get_initials()
-        return f"https://ui-avatars.com/api/?name={initials}&size=300&background=random&color=fff&length=2&font-size=0.5"
+        return f"https://ui-avatars.com/api/?name={initials}&size=300&background=6B1F2E&color=fff&length=2&font-size=0.5"
 
     def get_initials(self):
         full_name = self.user.get_full_name()
@@ -79,11 +81,12 @@ class Event(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Cover image — HEIC auto-converted to JPEG
     cover_image = ProcessedImageField(
         upload_to='event_covers/',
-        processors=[ResizeToFill(800, 400)],
+        processors=[ResizeToFill(1200, 600)],   # larger for banners
         format='JPEG',
-        options={'quality': 85},
+        options={'quality': 82, 'optimize': True},
         null=True,
         blank=True
     )
@@ -290,9 +293,9 @@ class FinancialTransaction(models.Model):
     notes = models.TextField(blank=True)
     receipt_image = ProcessedImageField(
         upload_to='finance/receipts/',
-        processors=[ResizeToFill(800, 600)],
+        processors=[ResizeToFill(1000, 750)],
         format='JPEG',
-        options={'quality': 85},
+        options={'quality': 80, 'optimize': True},
         null=True,
         blank=True
     )
