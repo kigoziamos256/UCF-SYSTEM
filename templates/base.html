@@ -19,9 +19,9 @@
             transition: all 0.3s ease;
         }
         .profile-picture:hover {
-            border-color: #0d6efd;
+            border-color: #6B1F2E;
             transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(13,110,253,0.3);
+            box-shadow: 0 4px 8px rgba(107,31,46,0.3);
         }
         .notification-badge {
             position: absolute;
@@ -75,6 +75,10 @@
         .role-badge.leader {
             background-color: #ffc107;
             color: #000;
+        }
+        .role-badge.finance {
+            background-color: #6B1F2E;
+            color: white;
         }
         .role-badge.member {
             background-color: #6c757d;
@@ -166,6 +170,30 @@
                         <i class="bi bi-megaphone"></i> Announcements
                     </a>
                 </li>
+
+                <!-- ========== SERVICES DROPDOWN ========== -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="servicesDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-house-heart"></i> Services
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'sunday_service' %}">
+                            <i class="bi bi-sunrise"></i> Sunday Service
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'midweek_service' %}">
+                            <i class="bi bi-moon-stars"></i> Mid-Week Service
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'my_qr' %}">
+                            <i class="bi bi-qr-code"></i> My Attendance QR
+                        </a></li>
+                        {% if user.member.role == 'admin' or user.member.role == 'leader' %}
+                        <li><a class="dropdown-item" href="{% url 'scanner' %}">
+                            <i class="bi bi-qr-code-scan"></i> Scan Attendance
+                        </a></li>
+                        {% endif %}
+                    </ul>
+                </li>
                 
                 {% if user.member.role == 'admin' or user.member.role == 'leader' %}
                 <li class="nav-item dropdown">
@@ -184,6 +212,9 @@
                             <i class="bi bi-building"></i> View Departments
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'upload_flyer' %}">
+                            <i class="bi bi-image"></i> Upload Service Flyer
+                        </a></li>
                         <li><a class="dropdown-item" href="{% url 'finance_dashboard' %}">
                             <i class="bi bi-wallet2"></i> Finance Department
                         </a></li>
@@ -256,6 +287,11 @@
                         <li>
                             <a class="dropdown-item" href="{% url 'profile' %}">
                                 <i class="bi bi-person-circle"></i> My Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'my_qr' %}">
+                                <i class="bi bi-qr-code"></i> My QR Code
                             </a>
                         </li>
                         <li><hr class="dropdown-divider"></li>
