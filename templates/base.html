@@ -418,5 +418,239 @@
         });
     })();
 </script>
+{% if user.is_authenticated %}
+<!-- WhatsApp-style toast container -->
+<div id="toast-container"></div>
+
+<style>
+    #toast-container {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        z-index: 9998;
+        max-width: 340px;
+        pointer-events: none;
+    }
+    .ucf-toast {
+        pointer-events: auto;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(107,31,46,0.22);
+        padding: 12px 16px;
+        margin-bottom: 10px;
+        border-left: 4px solid #6B1F2E;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        animation: slideInRight 0.35s ease-out;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .ucf-toast:hover {
+        transform: translateX(-4px);
+        box-shadow: 0 12px 32px rgba(107,31,46,0.3);
+    }
+    .ucf-toast.event { border-left-color: #0d6efd; }
+    .ucf-toast.duty { border-left-color: #ffc107; }
+    .ucf-toast.announcement { border-left-color: #6B1F2E; }
+    .ucf-toast-icon {
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(107,31,46,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: #6B1F2E;
+    }
+    .ucf-toast.event .ucf-toast-icon { background: rgba(13,110,253,0.1); color: #0d6efd; }
+    .ucf-toast.duty .ucf-toast-icon { background: rgba(255,193,7,0.18); color: #b8860b; }
+    .ucf-toast-body { flex-grow: 1; overflow: hidden; }
+    .ucf-toast-title {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 2px;
+        color: #333;
+    }
+    .ucf-toast-msg {
+        font-size: 0.82rem;
+        color: #6c757d;
+        margin: 0;
+        line-height: 1.35;
+    }
+    .ucf-toast-time {
+        font-size: 0.7rem;
+        color: #999;
+        margin-top: 4px;
+    }
+    .ucf-toast-close {
+        background: none;
+        border: none;
+        color: #bbb;
+        font-size: 1.1rem;
+        padding: 0;
+        line-height: 1;
+        cursor: pointer;
+    }
+    .ucf-toast-close:hover { color: #666; }
+    @keyframes slideInRight {
+        from { transform: translateX(420px); opacity: 0; }
+        to   { transform: translateX(0);     opacity: 1; }
+    }
+    @keyframes slideOutRight {
+        from { transform: translateX(0);     opacity: 1; }
+        to   { transform: translateX(420px); opacity: 0; }
+    }
+    @media (max-width: 576px) {
+        #toast-container {
+            top: auto;
+            bottom: 20px;
+            right: 12px;
+            left: 12px;
+            max-width: none;
+        }
+    }
+</style>
+
+<script>
+(function() {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    let seenIds = new Set();
+    let firstLoad = true;
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    // Subtle "ping" sound (WhatsApp-like, no external file needed)
+    function playPing() {
+        if (!soundEnabled) return;
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, now);
+            osc.frequency.exponentialRampToValueAtTime(1320, now + 0.08);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            osc.start(now);
+            osc.stop(now + 0.35);
+        } catch (e) { /* silent */ }
+    }
+
+    function iconFor(type) {
+        if (type === 'event') return 'bi-calendar-event';
+        if (type === 'duty') return 'bi-check2-circle';
+        if (type === 'announcement') return 'bi-megaphone';
+        return 'bi-bell';
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function showToast(n) {
+        const div = document.createElement('div');
+        div.className = 'ucf-toast ' + (n.type || '');
+        div.innerHTML = `
+            <div class="ucf-toast-icon">
+                <i class="bi ${iconFor(n.type)}"></i>
+            </div>
+            <div class="ucf-toast-body">
+                <div class="ucf-toast-title">${escapeHtml(n.title)}</div>
+                <p class="ucf-toast-msg">${escapeHtml(n.message).slice(0, 120)}${n.message.length > 120 ? '…' : ''}</p>
+                <div class="ucf-toast-time"><i class="bi bi-clock"></i> just now</div>
+            </div>
+            <button class="ucf-toast-close" aria-label="Close">&times;</button>
+        `;
+
+        div.addEventListener('click', function(e) {
+            if (e.target.classList.contains('ucf-toast-close')) return;
+            window.location.href = n.url;
+        });
+        div.querySelector('.ucf-toast-close').addEventListener('click', function(e) {
+            e.stopPropagation();
+            dismiss(div);
+        });
+
+        container.appendChild(div);
+        setTimeout(() => dismiss(div), 8000);
+    }
+
+    function dismiss(el) {
+        if (!el.parentElement) return;
+        el.style.animation = 'slideOutRight 0.3s ease-in forwards';
+        setTimeout(() => el.remove(), 300);
+    }
+
+    function updateBellCount(count) {
+        const bell = document.querySelector('#notificationDropdown');
+        if (!bell) return;
+        let badge = bell.querySelector('.notification-badge');
+        if (count > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'notification-badge';
+                bell.appendChild(badge);
+            }
+            badge.textContent = count;
+        } else if (badge) {
+            badge.remove();
+        }
+    }
+
+    async function poll() {
+        try {
+            const res = await fetch('/members/api/notifications/', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            updateBellCount(data.count);
+
+            const newOnes = data.notifications.filter(n => !seenIds.has(n.id));
+
+            if (firstLoad) {
+                // First poll: just remember what's already there, don't toast
+                data.notifications.forEach(n => seenIds.add(n.id));
+                firstLoad = false;
+                return;
+            }
+
+            if (newOnes.length > 0) {
+                playPing();
+                newOnes.reverse().forEach(n => {
+                    showToast(n);
+                    seenIds.add(n.id);
+                });
+            }
+        } catch (e) { /* silent */ }
+    }
+
+    // Enable sound only after first user interaction (browser autoplay policy)
+    document.addEventListener('click', function enableAudio() {
+        if (audioCtx) audioCtx.resume();
+    }, { once: false });
+
+    // First poll after 3 seconds, then every 15 seconds
+    setTimeout(function() {
+        poll();
+        setInterval(poll, 15000);
+    }, 3000);
+})();
+</script>
+{% endif %}
 </body>
 </html>
