@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload Flyer{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header text-white" style="background-color: var(--brand-purple);">
+                    <h4 class="mb-0"><i class="bi bi-image"></i> Upload Service Flyer</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">{{ form.service.label_tag }}{{ form.service }}</div>
+                        <div class="mb-3">{{ form.title.label_tag }}{{ form.title }}</div>
+                        <div class="mb-3">{{ form.description.label_tag }}{{ form.description }}</div>
+                        <div class="mb-3">{{ form.flyer_image.label_tag }}{{ form.flyer_image }}</div>
+                        <div class="mb-3">{{ form.youtube_live_url.label_tag }}{{ form.youtube_live_url }}</div>
+                        <div class="mb-3">{{ form.service_date.label_tag }}{{ form.service_date }}</div>
+                        <div class="mb-3 form-check">{{ form.is_active }}<label class="form-check-label">Publish immediately</label></div>
+                        <button type="submit" class="btn text-white" style="background-color: var(--brand-purple);">
+                            Publish Flyer
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
