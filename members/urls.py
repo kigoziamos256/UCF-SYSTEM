@@ -55,5 +55,13 @@ urlpatterns = [
     path('services/my-qr/', views.my_qr_view, name='my_qr'),
     path('services/qr/<int:member_id>/', views.member_qr_view, name='member_qr'),
     path('services/upload-flyer/', views.upload_flyer, name='upload_flyer'),
+
+    # Entrance QR (admin)
+    path('services/entrance-qr/', views.entrance_qr_view, name='entrance_qr'),
+    path('services/entrance-qr/<str:service_type>/image.png', views.entrance_qr_image, name='entrance_qr_image'),
+
+    # Attendance Report (admin)
+    path('services/attendance-report/', views.attendance_report_view, name='attendance_report'),
+    path('services/attendance-report/export/', views.attendance_export_csv, name='attendance_export_csv'),
     
 ]
