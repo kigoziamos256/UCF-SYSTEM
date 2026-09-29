@@ -30,13 +30,13 @@ from .models import (
     Event, Member, Duty, Announcement, Notification, Attendance, Department,
     FinancialTransaction, Budget, ExpenseRequisition, BankReconciliation,
     Vendor, IncomeCategory, ExpenseCategory, Currency, ServiceSchedule, ServiceFlyer, ServiceAttendance, GuestAttendance,
-    build_member_qr_payload, parse_member_qr_payload,
+    build_member_qr_payload, parse_member_qr_payload, 
 )
 from .forms import (
     EventForm, MemberRegistrationForm, DutyForm, AnnouncementForm,
     DepartmentForm, ProfilePictureForm, UserRegisterForm, AttendanceForm,
     FinancialTransactionForm, BudgetForm, ExpenseRequisitionForm,
-    BankReconciliationForm, FinanceFilterForm
+    BankReconciliationForm, FinanceFilterForm, ServiceFlyerForm
 )
 
 
