@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Scan Attendance{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="text-center" style="color: var(--brand-purple);">
+        <i class="bi bi-qr-code-scan"></i> Scan Member QR Code
+    </h3>
+
+    {% if service %}
+        <p class="text-center text-muted">
+            {{ service.label }} · {{ today }}
+        </p>
+    {% else %}
+        <div class="alert alert-warning text-center">
+            No active service right now.
+        </div>
+    {% endif %}
+
+    <div id="reader" style="width: 100%; max-width: 500px; margin: 0 auto;"></div>
+
+    <div id="result" class="mt-3"></div>
+
+    <div class="text-center mt-3">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Stop Scanning</a>
+    </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+(function () {
+    const resultBox = document.getElementById('result');
+
+    function getCookie(name) {
+        const v = `; ${document.cookie}`;
+        const parts = v.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+    }
+
+    async function sendPayload(payload) {
+        const res = await fetch("{% url 'scan_attendance_api' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({ payload: payload }),
+        });
+        return res.json();
+    }
+
+    function showResult(data) {
+        if (!data.ok) {
+            resultBox.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+            return;
+        }
+        if (data.guest) {
+            window.location.href = data.redirect;
+            return;
+        }
+        resultBox.innerHTML = `
+            <div class="alert alert-success d-flex align-items-center">
+                <img src="${data.photo}" style="width:50px;height:50px;border-radius:50%;margin-right:12px;">
+                <div>
+                    <strong>${data.name}</strong><br>
+                    <small>${data.status}</small>
+                </div>
+            </div>`;
+    }
+
+    const scanner = new Html5Qrcode("reader");
+    scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        async (decodedText) => {
+            try {
+                const data = await sendPayload(decodedText);
+                showResult(data);
+            } catch (e) {
+                resultBox.innerHTML = `<div class="alert alert-danger">Network error</div>`;
+            }
+        },
+        (error) => { /* ignore per-frame errors */ }
+    ).catch(err => {
+        resultBox.innerHTML = `<div class="alert alert-warning">Camera error: ${err}</div>`;
+    });
+})();
+</script>
+{% endblock %}
