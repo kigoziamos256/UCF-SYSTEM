@@ -23,4 +23,4 @@ psycopg2-binary
 django-pwa
 pillow-heif
 qrcode[pil]
-django-allauth
+django-allauth[socialaccount]
