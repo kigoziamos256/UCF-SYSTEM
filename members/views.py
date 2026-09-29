@@ -10,6 +10,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.shortcuts import render
 from .forms import CompleteProfileForm
+from django.core.paginator import Paginator
 
 import qrcode
 import io
@@ -382,9 +383,46 @@ def duty_detail_view(request, duty_id):
 
 @login_required
 def announcements_list(request):
-    announcements = Announcement.objects.all().order_by("-date_posted")
-    return render(request, "announcements.html", {"announcements": announcements})
+    """List all announcements with search, filter, and pagination."""
+    announcements = Announcement.objects.select_related(
+        'created_by', 'department'
+    ).order_by('-date_posted')
 
+    # ---------- Search ----------
+    query = request.GET.get('q', '').strip()
+    if query:
+        announcements = announcements.filter(
+            Q(title__icontains=query) |
+            Q(message__icontains=query) |
+            Q(content__icontains=query)
+        )
+
+    # ---------- Filter by department ----------
+    dept_id = request.GET.get('department', '').strip()
+    if dept_id:
+        announcements = announcements.filter(department_id=dept_id)
+
+    # ---------- Filter by importance ----------
+    important = request.GET.get('important', '').strip()
+    if important == '1':
+        announcements = announcements.filter(is_important=True)
+
+    # ---------- Pagination ----------
+    paginator = Paginator(announcements, 8)   # 8 per page
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'announcements': page_obj,
+        'page_obj': page_obj,
+        'is_paginated': page_obj.has_other_pages(),
+        'query': query,
+        'selected_department': dept_id,
+        'important_only': important,
+        'departments': Department.objects.all().order_by('name'),
+        'total_count': paginator.count,
+    }
+    return render(request, 'announcements.html', context)
 
 @login_required
 @leader_required
