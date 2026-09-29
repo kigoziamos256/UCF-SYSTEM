@@ -45,4 +45,15 @@ urlpatterns = [
     path('finance/requisition/', views.finance_requisition, name='finance_requisition'),
     path('finance/requisition/<int:req_id>/approve/', views.finance_requisition_approve, name='finance_requisition_approve'),
     path('finance/reconciliation/', views.finance_reconciliation, name='finance_reconciliation'),
+
+    # ==================== SERVICE URLS ====================
+    path('services/sunday/', views.sunday_service_view, name='sunday_service'),
+    path('services/midweek/', views.midweek_service_view, name='midweek_service'),
+    path('services/scanner/', views.scanner_view, name='scanner'),
+    path('services/scan/api/', views.scan_attendance_api, name='scan_attendance_api'),
+    path('services/guest/', views.guest_attendance_view, name='guest_attendance'),
+    path('services/my-qr/', views.my_qr_view, name='my_qr'),
+    path('services/qr/<int:member_id>/', views.member_qr_view, name='member_qr'),
+    path('services/upload-flyer/', views.upload_flyer, name='upload_flyer'),
+    
 ]
