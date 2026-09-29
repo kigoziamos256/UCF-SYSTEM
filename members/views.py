@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.shortcuts import render
+from .forms import CompleteProfileForm
 
 import qrcode
 import io
@@ -1250,3 +1251,45 @@ def attendance_export_csv(request):
             (a.checked_by.get_full_name() or a.checked_by.username) if a.checked_by else '—',
         ])
     return response
+
+
+@login_required
+def complete_profile_view(request):
+    """After social signup, ask the user to pick a department and photo."""
+    member = request.user.member
+
+    # Already completed → go to dashboard
+    if member.department and request.method == 'GET':
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        form = CompleteProfileForm(request.POST, request.FILES, instance=member)
+        if form.is_valid():
+            m = form.save(commit=False)
+
+            # If the user didn't upload a picture but has a Google avatar,
+            # download and save it now.
+            if not m.profile_picture and m.avatar_url:
+                try:
+                    import requests
+                    from django.core.files.base import ContentFile
+                    r = requests.get(m.avatar_url, timeout=10)
+                    if r.status_code == 200:
+                        m.profile_picture.save(
+                            f"google_{request.user.id}.jpg",
+                            ContentFile(r.content),
+                            save=False
+                        )
+                except Exception:
+                    pass  # silent — user can upload manually later
+
+            m.save()
+            messages.success(request, "Profile completed. Welcome to UCF!")
+            return redirect('dashboard')
+    else:
+        form = CompleteProfileForm(instance=member)
+
+    return render(request, 'members/complete_profile.html', {
+        'form': form,
+        'member': member,
+    })
