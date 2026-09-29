@@ -205,3 +205,14 @@ class ServiceFlyerForm(forms.ModelForm):
             'service_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+class CompleteProfileForm(forms.ModelForm):
+    class Meta:
+        model = Member
+        fields = ['department', 'profile_picture']
+        widgets = {
+            'department': forms.Select(attrs={'class': 'form-control'}),
+            'profile_picture': forms.ClearableFileInput(
+                attrs={'class': 'form-control', 'accept': 'image/*'}
+            ),
+        }
