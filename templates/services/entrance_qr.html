@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Entrance QR Codes{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3" style="color: var(--brand-purple);">
+        <i class="bi bi-qr-code"></i> Entrance QR Codes
+    </h2>
+    <p class="text-muted">
+        Download these QR codes and print them as posters for the church entrance.
+        Anyone can scan them with their phone camera — it opens the registration page directly.
+    </p>
+
+    <div class="row">
+        {% for s in schedules %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header text-white" style="background-color: var(--brand-purple);">
+                    <h5 class="mb-0">{{ s.label }}</h5>
+                    <small>{{ s.day_of_week }} · {{ s.start_time|time:"g:i A" }} – {{ s.end_time|time:"g:i A" }}</small>
+                </div>
+                <div class="card-body text-center">
+                    <img src="{% url 'entrance_qr_image' s.service_type %}"
+                         alt="{{ s.label }} QR Code"
+                         style="width: 100%; max-width: 280px; border: 1px solid #eee; border-radius: 8px;">
+
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{% url 'entrance_qr_image' s.service_type %}"
+                           download="ucf-{{ s.service_type }}-qr.png"
+                           class="btn text-white"
+                           style="background-color: var(--brand-purple);">
+                            <i class="bi bi-download"></i> Download PNG
+                        </a>
+                        <a href="{% url 'entrance_qr_image' s.service_type %}"
+                           target="_blank"
+                           class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-eye"></i> Open Full Size
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-warning">
+                No active services. Create them under <strong>Admin → Service schedules</strong> first.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="alert alert-info mt-3">
+        <strong>Print tip:</strong> Print each QR on A4 paper, add a friendly heading like
+        <em>"Welcome to UCF — Scan here to register your attendance"</em>, and place it on
+        the entrance door. Any phone camera app can scan it — no special app required.
+    </div>
+
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+{% endblock %}
