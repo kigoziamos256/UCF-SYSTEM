@@ -48,10 +48,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'cloudinary_storage',
     'cloudinary',
     'imagekit',
     'members.apps.MembersConfig',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
     'pwa',
 ]
 
@@ -79,6 +84,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'ucf.urls'
@@ -260,3 +266,43 @@ PWA_APP_SPLASH_SCREEN = [
 
 PWA_APP_DIR = 'ltr'
 PWA_APP_LANG = 'en'
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+SITE_ID = 1
+
+# ============================================================
+# DJANGO-ALLAUTH CONFIGURATION
+# ============================================================
+
+# Enable automatic signup — user is created without a form
+SOCIALACCOUNT_AUTO_SIGNUP = True
+
+# Trust Google's verified emails (safe for Google)
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+
+# Where to send user after successful social login
+LOGIN_REDIRECT_URL = '/members/complete-profile/'
+
+# Google provider configuration
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
+        'OAUTH_PKCE_ENABLED': True,
+        'FETCH_USERINFO': True,       # ensures we get the avatar URL
+        'EMAIL_AUTHENTICATION': True,
+        'VERIFIED_EMAIL': True,
+    }
+}
+
+# Custom adapter to auto-populate Member + profile picture
+SOCIALACCOUNT_ADAPTER = 'members.adapters.UCFSocialAccountAdapter'
+
+# Templates (we'll create these)
+ACCOUNT_LOGIN_TEMPLATE = 'account/login.html'
+SOCIALACCOUNT_LOGIN_ON_GET = True
