@@ -1337,3 +1337,39 @@ def complete_profile_view(request):
 def help_view(request):
     """Public help page explaining how to use the system."""
     return render(request, 'help.html')
+
+# ==================== NOTIFICATIONS API ====================
+
+@login_required
+def notifications_api(request):
+    """Return unread notifications for polling."""
+    member = request.user.member
+    qs = member.notifications.filter(is_read=False).order_by('-created_at')
+    total = qs.count()
+    latest = qs[:10]
+
+    from django.urls import reverse
+    data = {
+        'count': total,
+        'notifications': [
+            {
+                'id': n.id,
+                'type': n.notification_type,
+                'title': n.title or 'New notification',
+                'message': n.message,
+                'created_at': n.created_at.strftime('%b %d, %H:%M'),
+                'url': reverse('mark_notification_read', args=[n.id]),
+            }
+            for n in latest
+        ],
+    }
+    return JsonResponse(data)
+
+
+@login_required
+@require_POST
+def mark_all_notifications_read(request):
+    """Mark all notifications as read."""
+    member = request.user.member
+    member.notifications.filter(is_read=False).update(is_read=True)
+    return JsonResponse({'ok': True})
