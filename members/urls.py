@@ -77,4 +77,8 @@ urlpatterns = [
     path('services/attendance-report/export/', views.attendance_export_csv, name='attendance_export_csv'),
     # ==================== HELP ====================
     path('help/', views.help_view, name='help'),
+
+    # ==================== NOTIFICATIONS API ====================
+    path('api/notifications/', views.notifications_api, name='notifications_api'),
+    path('api/notifications/mark-all/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
 ]
