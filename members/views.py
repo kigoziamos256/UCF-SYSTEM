@@ -1109,4 +1109,4 @@ def upload_flyer(request):
             return redirect('sunday_service' if 'sunday' in flyer.service.service_type else 'midweek_service')
     else:
         form = ServiceFlyerForm()
-    return render(request, 'services/upload_flyer.html', {'form': form}
+    return render(request, 'services/upload_flyer.html', {'form': form})
