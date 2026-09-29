@@ -212,14 +212,26 @@
                             <i class="bi bi-building"></i> View Departments
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
+
+                        <!-- ===== Services admin section ===== -->
                         <li><a class="dropdown-item" href="{% url 'upload_flyer' %}">
                             <i class="bi bi-image"></i> Upload Service Flyer
                         </a></li>
+                        <li><a class="dropdown-item" href="{% url 'entrance_qr' %}">
+                            <i class="bi bi-qr-code"></i> Entrance QR Codes
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'attendance_report' %}">
+                            <i class="bi bi-clipboard-data"></i> Attendance Report
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+
+                        <!-- ===== Finance ===== -->
                         <li><a class="dropdown-item" href="{% url 'finance_dashboard' %}">
                             <i class="bi bi-wallet2"></i> Finance Department
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
                         {% endif %}
+
                         <li><a class="dropdown-item" href="{% url 'assign_duty' %}">
                             <i class="bi bi-check2-circle"></i> Assign Duty
                         </a></li>
