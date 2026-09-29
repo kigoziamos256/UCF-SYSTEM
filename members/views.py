@@ -1110,3 +1110,141 @@ def upload_flyer(request):
     else:
         form = ServiceFlyerForm()
     return render(request, 'services/upload_flyer.html', {'form': form})
+
+# ==================== ENTRANCE QR CODE ====================
+
+@login_required
+@admin_required
+def entrance_qr_view(request):
+    """Admin page: generate & download entrance QR codes."""
+    schedules = ServiceSchedule.objects.filter(is_active=True)
+    return render(request, 'services/entrance_qr.html', {
+        'schedules': schedules,
+        'base_url': request.build_absolute_uri('/').rstrip('/'),
+    })
+
+
+@login_required
+@admin_required
+def entrance_qr_image(request, service_type):
+    """Return PNG QR for a specific service. Encodes the guest URL."""
+    import qrcode
+    from qrcode.image.pil import PilImage
+
+    # Confirm the service exists
+    service = ServiceSchedule.objects.filter(service_type=service_type, is_active=True).first()
+    if not service:
+        return HttpResponse("Service not found", status=404)
+
+    # Build the public guest URL
+    guest_path = reverse('guest_attendance') + f"?service={service_type}"
+    full_url = request.build_absolute_uri(guest_path)
+
+    # Generate QR
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,  # high = works if slightly damaged
+        box_size=12,
+        border=2,
+    )
+    qr.add_data(full_url)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="#6B1F2E", back_color="white").convert("RGB")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    return HttpResponse(buf.getvalue(), content_type="image/png")
+
+
+# ==================== ATTENDANCE REPORT ====================
+
+@login_required
+@admin_required
+def attendance_report_view(request):
+    """Admin: view/filter all service attendance."""
+    from_date = request.GET.get('from')
+    to_date = request.GET.get('to')
+    service_id = request.GET.get('service')
+    session = request.GET.get('session')
+
+    qs = ServiceAttendance.objects.select_related(
+        'member__user', 'service', 'checked_by'
+    ).order_by('-service_date', 'session', 'member__user__first_name')
+
+    if from_date:
+        qs = qs.filter(service_date__gte=from_date)
+    if to_date:
+        qs = qs.filter(service_date__lte=to_date)
+    if service_id:
+        qs = qs.filter(service_id=service_id)
+    if session:
+        qs = qs.filter(session=session)
+
+    # Summary counts
+    summary = {
+        'total': qs.count(),
+        'unique_members': qs.values('member').distinct().count(),
+        'first': qs.filter(session='first').count(),
+        'second': qs.filter(session='second').count(),
+        'midweek': qs.filter(session='midweek').count(),
+    }
+
+    context = {
+        'attendances': qs[:500],   # cap to 500 for speed
+        'summary': summary,
+        'schedules': ServiceSchedule.objects.filter(is_active=True),
+        'from_date': from_date or '',
+        'to_date': to_date or '',
+        'selected_service': service_id or '',
+        'selected_session': session or '',
+    }
+    return render(request, 'services/attendance_report.html', context)
+
+
+@login_required
+@admin_required
+def attendance_export_csv(request):
+    """Admin: export filtered attendance to CSV."""
+    import csv
+    from django.http import HttpResponse as DjangoHttpResponse
+
+    from_date = request.GET.get('from')
+    to_date = request.GET.get('to')
+    service_id = request.GET.get('service')
+    session = request.GET.get('session')
+
+    qs = ServiceAttendance.objects.select_related(
+        'member__user', 'service'
+    ).order_by('-service_date', 'session', 'member__user__first_name')
+
+    if from_date:
+        qs = qs.filter(service_date__gte=from_date)
+    if to_date:
+        qs = qs.filter(service_date__lte=to_date)
+    if service_id:
+        qs = qs.filter(service_id=service_id)
+    if session:
+        qs = qs.filter(session=session)
+
+    response = DjangoHttpResponse(content_type='text/csv')
+    filename = f"attendance_{timezone.localdate()}.csv"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        'Date', 'Service', 'Session', 'Member Name',
+        'Email', 'Phone', 'Check-in Time', 'Recorded By'
+    ])
+    for a in qs:
+        writer.writerow([
+            a.service_date,
+            a.service.label,
+            a.get_session_display() if hasattr(a, 'get_session_display') else a.session,
+            a.member.user.get_full_name() or a.member.user.username,
+            a.member.user.email,
+            a.member.phone_number,
+            a.check_in_time.strftime('%Y-%m-%d %H:%M'),
+            (a.checked_by.get_full_name() or a.checked_by.username) if a.checked_by else '—',
+        ])
+    return response
