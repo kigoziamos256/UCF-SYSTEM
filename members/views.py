@@ -353,23 +353,32 @@ def assign_duty(request):
             duty.created_by = request.user
 
             # ── Smart department fallback ──
-            if not duty.department:
+            # NOTE: Use `duty.department_id` (the FK column), not `duty.department`.
+            # Accessing `.department` on an unsaved instance with None raises
+            # RelatedObjectDoesNotExist in Django.
+            if not duty.department_id:
                 # 1. Try the assigned member's department
                 try:
-                    duty.department = duty.assigned_to.member.department
-                except Exception:
-                    duty.department = None
+                    member = Member.objects.get(user=duty.assigned_to)
+                    if member.department_id:
+                        duty.department = member.department
+                except Member.DoesNotExist:
+                    pass
 
                 # 2. If still empty, try the creator's department
-                if not duty.department:
-                    duty.department = getattr(request.user.member, 'department', None)
+                if not duty.department_id:
+                    creator_member = getattr(request.user, 'member', None)
+                    if creator_member and creator_member.department_id:
+                        duty.department = creator_member.department
 
                 # 3. If STILL empty, try the very first department available
-                if not duty.department:
-                    duty.department = Department.objects.first()
+                if not duty.department_id:
+                    first_dept = Department.objects.first()
+                    if first_dept:
+                        duty.department = first_dept
 
                 # 4. If there are no departments at all, we cannot save
-                if not duty.department:
+                if not duty.department_id:
                     messages.error(
                         request,
                         "Cannot assign duty: no department exists yet. "
