@@ -669,3 +669,129 @@ def check_duty_completion(sender, instance, **kwargs):
                 )
         except (Member.DoesNotExist, AttributeError):
             pass
+
+# ==================== SERVICES (SUNDAY & MID-WEEK) ====================
+
+class ServiceSchedule(models.Model):
+    """Recurring weekly service schedule"""
+    SERVICE_TYPES = (
+        ('sunday_first',  'Sunday First Service (8:30 AM – 10:00 AM)'),
+        ('sunday_second', 'Sunday Second Service (11:00 AM – 1:00 PM)'),
+        ('midweek',       'Mid-Week Service (Wednesday 6:00 PM – 8:00 PM)'),
+    )
+
+    service_type = models.CharField(max_length=30, choices=SERVICE_TYPES, unique=True)
+    label        = models.CharField(max_length=100)
+    day_of_week  = models.CharField(max_length=10)       # "Sunday" or "Wednesday"
+    start_time   = models.TimeField()
+    end_time     = models.TimeField()
+    is_active    = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['day_of_week', 'start_time']
+
+    def __str__(self):
+        return self.label
+
+
+class ServiceFlyer(models.Model):
+    """Weekly flyer posted for a specific service"""
+    service          = models.ForeignKey(ServiceSchedule, on_delete=models.CASCADE, related_name='flyers')
+    title            = models.CharField(max_length=200)
+    description      = models.TextField(blank=True)
+    flyer_image      = ProcessedImageField(
+        upload_to='service_flyers/',
+        processors=[ResizeToFill(1200, 1500)],   # portrait flyer
+        format='JPEG',
+        options={'quality': 85, 'optimize': True},
+        null=True, blank=True
+    )
+    youtube_live_url = models.URLField(blank=True, help_text="YouTube live stream link for this service")
+    service_date     = models.DateField()
+    is_active        = models.BooleanField(default=True)
+    created_by       = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_flyers')
+    created_at       = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-service_date']
+        unique_together = ['service', 'service_date']
+
+    def __str__(self):
+        return f"{self.service.label} — {self.service_date}"
+
+
+class ServiceAttendance(models.Model):
+    """Attendance record for a specific service date + session"""
+    SESSION_CHOICES = (
+        ('first',  'First Service'),
+        ('second', 'Second Service'),
+        ('midweek','Mid-Week Service'),
+    )
+
+    service      = models.ForeignKey(ServiceSchedule, on_delete=models.CASCADE, related_name='attendances')
+    service_date = models.DateField()
+    session      = models.CharField(max_length=10, choices=SESSION_CHOICES, blank=True)
+    member       = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='service_attendances')
+    check_in_time = models.DateTimeField(default=timezone.now)
+    checked_by   = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                      related_name='checked_service_attendances')
+    notes        = models.TextField(blank=True)
+
+    class Meta:
+        unique_together = ['service', 'service_date', 'session', 'member']
+        ordering = ['-check_in_time']
+
+    def __str__(self):
+        return f"{self.member.user.username} — {self.service.label} {self.service_date} ({self.session})"
+
+
+class GuestAttendance(models.Model):
+    """First-time guest attendance (auto-creates a Member account)"""
+    name         = models.CharField(max_length=200)
+    phone        = models.CharField(max_length=20, blank=True)
+    email        = models.EmailField(blank=True)
+    service      = models.ForeignKey(ServiceSchedule, on_delete=models.CASCADE, related_name='guest_attendances')
+    service_date = models.DateField()
+    session      = models.CharField(max_length=10, choices=ServiceAttendance.SESSION_CHOICES, blank=True)
+    check_in_time = models.DateTimeField(default=timezone.now)
+    converted_to_member = models.BooleanField(default=False)
+    notes        = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-check_in_time']
+
+    def __str__(self):
+        return f"Guest: {self.name} — {self.service.label} {self.service_date}"
+
+
+# ==================== MEMBER QR CODE ====================
+
+def member_qr_token(member_id):
+    """Return a short, tamper-resistant token for the member QR code."""
+    import hashlib
+    from django.conf import settings
+    raw = f"{member_id}:{settings.SECRET_KEY}".encode()
+    return hashlib.sha256(raw).hexdigest()[:16]
+
+
+# Add helper method to Member via monkey-patch approach is ugly,
+# so instead we define a function that views use.
+def build_member_qr_payload(member):
+    """Format: UCF-MEMBER-<id>-<token>"""
+    return f"UCF-MEMBER-{member.id}-{member_qr_token(member.id)}"
+
+
+def parse_member_qr_payload(payload):
+    """Return member_id if valid, else None."""
+    if not payload or not payload.startswith("UCF-MEMBER-"):
+        return None
+    try:
+        parts = payload.split("-")
+        # UCF | MEMBER | <id> | <token>
+        member_id = int(parts[2])
+        token = parts[3]
+    except (IndexError, ValueError):
+        return None
+    if member_qr_token(member_id) != token:
+        return None
+    return member_id
