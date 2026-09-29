@@ -7,11 +7,14 @@ from members import views
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # Allauth (Google + account URLs) — must be at ROOT
+    # Allauth (Google + account)
     path('accounts/', include('allauth.urls')),
 
-    # PWA (manifest, service worker, etc.)
+    # PWA
     path('', include('pwa.urls')),
+
+    # Root-level auth (so /logout/ works)
+    path('logout/', views.custom_logout, name='logout'),
 
     # App URLs
     path('', views.home, name='home'),
@@ -19,6 +22,5 @@ urlpatterns = [
     path('members/', include('members.urls')),
 ]
 
-# Serve media files in development only
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
