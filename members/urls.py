@@ -75,4 +75,6 @@ urlpatterns = [
     # Attendance report (admin)
     path('services/attendance-report/', views.attendance_report_view, name='attendance_report'),
     path('services/attendance-report/export/', views.attendance_export_csv, name='attendance_export_csv'),
+    # ==================== HELP ====================
+    path('help/', views.help_view, name='help'),
 ]
