@@ -51,14 +51,20 @@ class AttendanceForm(forms.ModelForm):
 class DutyForm(forms.ModelForm):
     class Meta:
         model = Duty
-        fields = ['title', 'description', 'assigned_to', 'duty_date']
+        fields = ['title', 'description', 'assigned_to', 'department', 'duty_date']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control'}),
             'assigned_to': forms.Select(attrs={'class': 'form-control'}),
+            'department': forms.Select(attrs={'class': 'form-control'}),
             'duty_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Department is optional in the form — we'll auto-fill it if empty
+        self.fields['department'].required = False
+        self.fields['department'].help_text = "Leave blank to use the assigned member's department"
 
 class AnnouncementForm(forms.ModelForm):
     class Meta:
