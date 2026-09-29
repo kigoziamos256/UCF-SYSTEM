@@ -2,6 +2,7 @@ from django import forms
 from .models import Event, Member, Duty, Announcement, Department, Attendance, FinancialTransaction
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
+from .models import ServiceFlyer, ServiceSchedule
 
 from .models import (
     FinancialTransaction, Budget, ExpenseRequisition, BankReconciliation,
@@ -188,3 +189,19 @@ class FinanceFilterForm(forms.Form):
         required=False,
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
     )
+
+
+class ServiceFlyerForm(forms.ModelForm):
+    class Meta:
+        model = ServiceFlyer
+        fields = ['service', 'title', 'description', 'flyer_image',
+                  'youtube_live_url', 'service_date', 'is_active']
+        widgets = {
+            'service': forms.Select(attrs={'class': 'form-control'}),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'flyer_image': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+            'youtube_live_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://youtube.com/live/...'}),
+            'service_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
