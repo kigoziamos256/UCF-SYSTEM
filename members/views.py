@@ -1414,3 +1414,30 @@ def mark_all_notifications_read(request):
     member = request.user.member
     member.notifications.filter(is_read=False).update(is_read=True)
     return JsonResponse({'ok': True})
+
+# ==================== MARK DUTY COMPLETE ====================
+
+@login_required
+@require_POST
+def mark_duty_complete(request, duty_id):
+    """Assignee marks their own duty as completed → notifies the assigner."""
+    duty = get_object_or_404(Duty, id=duty_id)
+
+    # Only the assignee (or an admin) can mark it complete
+    is_assignee = (duty.assigned_to == request.user)
+    is_admin = hasattr(request.user, 'member') and request.user.member.role == 'admin'
+
+    if not (is_assignee or is_admin):
+        messages.error(request, "You can only mark your own duties as complete.")
+        return redirect('dashboard')
+
+    if duty.completed:
+        messages.info(request, "This duty was already marked complete.")
+        return redirect('dashboard')
+
+    duty.completed = True
+    duty.completed_at = timezone.now()
+    duty.save()   # 👈 this triggers the existing check_duty_completion signal
+
+    messages.success(request, f"Duty '{duty.title}' marked as complete. The assigner has been notified.")
+    return redirect('dashboard')
