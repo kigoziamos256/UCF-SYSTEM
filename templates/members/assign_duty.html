@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Assign Duty{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <div class="card shadow">
+                <div class="card-header text-white" style="background-color: var(--brand-purple);">
+                    <h4 class="mb-0">
+                        <i class="bi bi-check2-circle"></i> Assign Duty
+                    </h4>
+                </div>
+                <div class="card-body">
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Title *</label>
+                            {{ form.title }}
+                            <div class="form-text">Give the duty a clear name (e.g., "Usher at first service").</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description *</label>
+                            {{ form.description }}
+                            <div class="form-text">Explain what needs to be done and any details.</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Assign To *</label>
+                                {{ form.assigned_to }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Due Date *</label>
+                                {{ form.duty_date }}
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary me-md-2">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn text-white"
+                                    style="background-color: var(--brand-purple);">
+                                <i class="bi bi-check2"></i> Assign Duty
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
