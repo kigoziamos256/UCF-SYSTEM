@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     'cloudinary_storage',
     'cloudinary',
     'imagekit',
-    'members',
+    'members.apps.MembersConfig',
     'pwa',
 ]
 
