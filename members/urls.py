@@ -63,5 +63,7 @@ urlpatterns = [
     # Attendance Report (admin)
     path('services/attendance-report/', views.attendance_report_view, name='attendance_report'),
     path('services/attendance-report/export/', views.attendance_export_csv, name='attendance_export_csv'),
+    path('complete-profile/', views.complete_profile_view, name='complete_profile'),
+    path('accounts/', include('allauth.urls')),   # allauth's own URLs
     
 ]
