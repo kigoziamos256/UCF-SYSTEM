@@ -10,10 +10,20 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.shortcuts import render
 
+import qrcode
+import io
+import base64
+from datetime import datetime, time, date
+
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+
 from .models import (
     Event, Member, Duty, Announcement, Notification, Attendance, Department,
     FinancialTransaction, Budget, ExpenseRequisition, BankReconciliation,
-    Vendor, IncomeCategory, ExpenseCategory, Currency
+    Vendor, IncomeCategory, ExpenseCategory, Currency, ServiceSchedule, ServiceFlyer, ServiceAttendance, GuestAttendance,
+    build_member_qr_payload, parse_member_qr_payload,
 )
 from .forms import (
     EventForm, MemberRegistrationForm, DutyForm, AnnouncementForm,
@@ -21,6 +31,7 @@ from .forms import (
     FinancialTransactionForm, BudgetForm, ExpenseRequisitionForm,
     BankReconciliationForm, FinanceFilterForm
 )
+
 
 
 # -------------------------
@@ -865,3 +876,237 @@ def custom_csrf_failure(request, reason=""):
         f"Host: {request.META.get('HTTP_HOST', 'none')}"
     )
     return render(request, 'csrf_failure.html', {'reason': reason}, status=403)
+
+def _current_service_and_session():
+    """Return (ServiceSchedule, session_label) based on current day/time."""
+    now = timezone.localtime()
+    weekday = now.strftime('%A')          # Sunday / Wednesday
+    today = now.date()
+    current_time = now.time()
+
+    if weekday == 'Sunday':
+        first = ServiceSchedule.objects.filter(service_type='sunday_first', is_active=True).first()
+        second = ServiceSchedule.objects.filter(service_type='sunday_second', is_active=True).first()
+
+        if first and first.start_time <= current_time <= first.end_time:
+            return first, 'first'
+        if second and second.start_time <= current_time <= second.end_time:
+            return second, 'second'
+        # Before 10 AM → first, else second
+        if current_time < time(10, 30):
+            return first, 'first'
+        return second, 'second'
+
+    if weekday == 'Wednesday':
+        mid = ServiceSchedule.objects.filter(service_type='midweek', is_active=True).first()
+        return mid, 'midweek'
+
+    return None, None
+
+
+def sunday_service_view(request):
+    """Public panel for Sunday service info + flyer + live stream."""
+    first = ServiceSchedule.objects.filter(service_type='sunday_first', is_active=True).first()
+    second = ServiceSchedule.objects.filter(service_type='sunday_second', is_active=True).first()
+
+    today = timezone.localdate()
+    flyer_first = ServiceFlyer.objects.filter(service=first, service_date=today, is_active=True).first() if first else None
+    flyer_second = ServiceFlyer.objects.filter(service=second, service_date=today, is_active=True).first() if second else None
+
+    # fallback to most recent flyer
+    if not flyer_first and first:
+        flyer_first = ServiceFlyer.objects.filter(service=first, is_active=True).first()
+    if not flyer_second and second:
+        flyer_second = ServiceFlyer.objects.filter(service=second, is_active=True).first()
+
+    context = {
+        'first': first,
+        'second': second,
+        'flyer_first': flyer_first,
+        'flyer_second': flyer_second,
+        'today': today,
+    }
+    return render(request, 'services/sunday_service.html', context)
+
+
+def midweek_service_view(request):
+    """Public panel for Mid-week service."""
+    mid = ServiceSchedule.objects.filter(service_type='midweek', is_active=True).first()
+    flyer = ServiceFlyer.objects.filter(service=mid, is_active=True).first() if mid else None
+    context = {'service': mid, 'flyer': flyer}
+    return render(request, 'services/midweek_service.html', context)
+
+
+@login_required
+def scanner_view(request):
+    """Page that opens the phone camera to scan a member QR code."""
+    service, session = _current_service_and_session()
+    context = {
+        'service': service,
+        'session': session,
+        'today': timezone.localdate(),
+    }
+    return render(request, 'services/scanner.html', context)
+
+
+@login_required
+@require_POST
+def scan_attendance_api(request):
+    """API called by the scanner when a QR is decoded."""
+    import json
+    try:
+        payload = json.loads(request.body).get('payload', '')
+    except Exception:
+        return JsonResponse({'ok': False, 'error': 'Invalid request'}, status=400)
+
+    # Guest QR (door QR with guest registration link)
+    if payload.startswith('UCF-GUEST-'):
+        service_type = payload.replace('UCF-GUEST-', '')
+        return JsonResponse({
+            'ok': True,
+            'guest': True,
+            'redirect': f"/members/services/guest/?service={service_type}"
+        })
+
+    member_id = parse_member_qr_payload(payload)
+    if not member_id:
+        return JsonResponse({'ok': False, 'error': 'Unknown QR code'}, status=400)
+
+    try:
+        member = Member.objects.get(id=member_id)
+    except Member.DoesNotExist:
+        return JsonResponse({'ok': False, 'error': 'Member not found'}, status=404)
+
+    service, session = _current_service_and_session()
+    if not service:
+        return JsonResponse({'ok': False, 'error': 'No active service right now'}, status=400)
+
+    today = timezone.localdate()
+    obj, created = ServiceAttendance.objects.get_or_create(
+        service=service,
+        service_date=today,
+        session=session,
+        member=member,
+        defaults={'checked_by': request.user}
+    )
+    return JsonResponse({
+        'ok': True,
+        'created': created,
+        'name': member.user.get_full_name() or member.user.username,
+        'status': 'Already marked' if not created else 'Marked present',
+        'photo': member.get_profile_picture_url(),
+    })
+
+
+def guest_attendance_view(request):
+    """Guest fills a short form → we create Member + attendance."""
+    service_type = request.GET.get('service', 'sunday_first')
+    service = ServiceSchedule.objects.filter(service_type=service_type, is_active=True).first()
+    if not service:
+        messages.error(request, "That service is not currently active.")
+        return redirect('sunday_service')
+
+    # Determine session
+    _, session = _current_service_and_session()
+
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        email = request.POST.get('email', '').strip().lower()
+
+        if not name:
+            messages.error(request, "Please enter your name.")
+        else:
+            # If email exists → use existing user; else create a new one
+            user = None
+            if email:
+                user = User.objects.filter(email__iexact=email).first()
+
+            created_new = False
+            if not user:
+                # Build a safe username
+                base = (email.split('@')[0] if email else name.lower().replace(' ', '.'))[:20]
+                username = base
+                i = 1
+                while User.objects.filter(username=username).exists():
+                    username = f"{base}{i}"
+                    i += 1
+
+                import secrets
+                temp_pass = secrets.token_urlsafe(8)
+                user = User.objects.create_user(
+                    username=username,
+                    email=email or f"{username}@guest.ucf",
+                    password=temp_pass,
+                    first_name=name.split()[0][:30],
+                    last_name=(" ".join(name.split()[1:])[:30] if len(name.split()) > 1 else "")
+                )
+                user.member.phone_number = phone
+                user.member.save()
+                created_new = True
+
+            # Mark attendance
+            ServiceAttendance.objects.get_or_create(
+                service=service,
+                service_date=timezone.localdate(),
+                session=session,
+                member=user.member,
+            )
+
+            # Also keep a guest log
+            GuestAttendance.objects.create(
+                name=name,
+                phone=phone,
+                email=email,
+                service=service,
+                service_date=timezone.localdate(),
+                session=session,
+                converted_to_member=True,
+            )
+
+            messages.success(request, f"Welcome, {name}! Your attendance is recorded.")
+            return redirect('sunday_service' if 'sunday' in service_type else 'midweek_service')
+
+    return render(request, 'services/guest_attendance.html', {
+        'service': service,
+        'session': session,
+    })
+
+
+# ==================== QR CODE IMAGE FOR A MEMBER ====================
+
+@login_required
+def member_qr_view(request, member_id):
+    """Return a PNG QR code for the member."""
+    member = get_object_or_404(Member, id=member_id)
+    payload = build_member_qr_payload(member)
+
+    img = qrcode.make(payload)
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    return HttpResponse(buf.getvalue(), content_type='image/png')
+
+
+@login_required
+def my_qr_view(request):
+    """Page showing the logged-in user's personal QR code."""
+    return render(request, 'services/my_qr.html', {'member': request.user.member})
+
+
+# ==================== MANAGE FLYERS ====================
+
+@login_required
+@admin_required
+def upload_flyer(request):
+    """Admin uploads a new flyer + YouTube link for a service."""
+    if request.method == 'POST':
+        form = ServiceFlyerForm(request.POST, request.FILES)
+        if form.is_valid():
+            flyer = form.save(commit=False)
+            flyer.created_by = request.user
+            flyer.save()
+            messages.success(request, "Flyer published!")
+            return redirect('sunday_service' if 'sunday' in flyer.service.service_type else 'midweek_service')
+    else:
+        form = ServiceFlyerForm()
+    return render(request, 'services/upload_flyer.html', {'form': form}
