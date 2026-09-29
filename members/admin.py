@@ -1,4 +1,5 @@
 from django.contrib import admin
+from .models import ServiceSchedule, ServiceFlyer, ServiceAttendance, GuestAttendance
 from .models import (
     Member, Department, Event, Duty, Announcement, Notification,
     Attendance, Currency, IncomeCategory, ExpenseCategory, Vendor,
@@ -304,3 +305,28 @@ class BankReconciliationAdmin(admin.ModelAdmin):
         queryset.update(is_reconciled=True)
         self.message_user(request, f"{queryset.count()} reconciliation(s) marked as reconciled.")
     mark_as_reconciled.short_description = "Mark selected as reconciled"
+
+
+@admin.register(ServiceSchedule)
+class ServiceScheduleAdmin(admin.ModelAdmin):
+    list_display = ('label', 'day_of_week', 'start_time', 'end_time', 'is_active')
+    list_editable = ('is_active',)
+
+
+@admin.register(ServiceFlyer)
+class ServiceFlyerAdmin(admin.ModelAdmin):
+    list_display = ('service', 'title', 'service_date', 'is_active')
+    list_filter = ('service', 'is_active', 'service_date')
+    search_fields = ('title',)
+
+
+@admin.register(ServiceAttendance)
+class ServiceAttendanceAdmin(admin.ModelAdmin):
+    list_display = ('member', 'service', 'service_date', 'session', 'check_in_time')
+    list_filter = ('service', 'session', 'service_date')
+
+
+@admin.register(GuestAttendance)
+class GuestAttendanceAdmin(admin.ModelAdmin):
+    list_display = ('name', 'service', 'service_date', 'session', 'converted_to_member')
+    list_filter = ('service', 'service_date')
