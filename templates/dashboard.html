@@ -323,6 +323,38 @@
             </div>
         </div>
 
+        <!-- Departments Showcase -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-diagram-3 text-primary"></i> Our Ministries</h5>
+                <a href="{% url 'department_list_view' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {% for dept in departments %}
+                    <div class="col-md-3 col-6">
+                        <a href="{% url 'department_detail' dept.id %}" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm text-center py-3">
+                                {% if dept.cover_image %}
+                                    <img src="{{ dept.cover_image.url }}" class="mx-auto rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                                {% else %}
+                                    <i class="bi bi-people fs-1 text-muted"></i>
+                                {% endif %}
+                                <div class="mt-2 fw-bold text-dark">{{ dept.name }}</div>
+                            </div>
+                        </a>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center mb-0">No departments added yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
         <!-- Recent Announcements -->
         <div class="col-md-12 mb-4">
             <div class="card">
