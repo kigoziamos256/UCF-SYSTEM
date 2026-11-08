@@ -13,6 +13,8 @@ from django.contrib import messages
 from django.shortcuts import render
 from .forms import CompleteProfileForm
 from django.core.paginator import Paginator
+from django.core.exceptions import PermissionDenied
+from .forms import DepartmentProfileForm, DepartmentPhotoFormSet
 
 
 import qrcode
@@ -1442,3 +1444,62 @@ def mark_duty_complete(request, duty_id):
 
     messages.success(request, f"Duty '{duty.title}' marked as complete. The assigner has been notified.")
     return redirect('dashboard')
+
+
+def department_list_view(request):
+    """Public view: List all departments"""
+    departments = Department.objects.all()
+    return render(request, 'departments/list.html', {'departments': departments})
+
+def department_detail_view(request, dept_id):
+    """Public view: See a department's profile"""
+    department = get_object_or_404(Department, id=dept_id)
+    photos = department.photos.all()
+    
+    # Check if the current user has permission to edit this specific department
+    can_edit = False
+    if request.user.is_authenticated:
+        member = request.user.member
+        if member.role == 'admin':
+            can_edit = True
+        elif member.role == 'leader' and member.department == department:
+            can_edit = True
+
+    return render(request, 'departments/detail.html', {
+        'department': department,
+        'photos': photos,
+        'can_edit': can_edit
+    })
+
+@login_required
+def department_edit_view(request, dept_id):
+    """Admin or Leader edits their department"""
+    department = get_object_or_404(Department, id=dept_id)
+    member = request.user.member
+
+    # STRICT PERMISSION CHECK
+    if member.role == 'admin':
+        pass # Admin can edit any
+    elif member.role == 'leader' and member.department == department:
+        pass # Leader can only edit their own
+    else:
+        raise PermissionDenied("You don't have permission to edit this department.")
+
+    if request.method == 'POST':
+        form = DepartmentProfileForm(request.POST, request.FILES, instance=department)
+        formset = DepartmentPhotoFormSet(request.POST, request.FILES, instance=department)
+        
+        if form.is_valid() and formset.is_valid():
+            form.save()
+            formset.save()
+            messages.success(request, f"{department.name} profile updated successfully!")
+            return redirect('department_detail', dept_id=department.id)
+    else:
+        form = DepartmentProfileForm(instance=department)
+        formset = DepartmentPhotoFormSet(instance=department)
+
+    return render(request, 'departments/edit.html', {
+        'department': department,
+        'form': form,
+        'formset': formset
+    })
