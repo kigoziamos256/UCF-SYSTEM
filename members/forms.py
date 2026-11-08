@@ -3,6 +3,8 @@ from .models import Event, Member, Duty, Announcement, Department, Attendance, F
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from .models import ServiceFlyer, ServiceSchedule
+from django.forms import inlineformset_factory
+from .models import Department, DepartmentPhoto
 
 from .models import (
     FinancialTransaction, Budget, ExpenseRequisition, BankReconciliation,
@@ -222,3 +224,28 @@ class CompleteProfileForm(forms.ModelForm):
                 attrs={'class': 'form-control', 'accept': 'image/*'}
             ),
         }
+
+class DepartmentProfileForm(forms.ModelForm):
+    class Meta:
+        model = Department
+        fields = ['name', 'leadership_structure', 'profile_writeup', 'stories_and_experiences', 'cover_image']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'leadership_structure': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'profile_writeup': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
+            'stories_and_experiences': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'cover_image': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+        }
+
+# Formset to handle multiple photos at once
+DepartmentPhotoFormSet = inlineformset_factory(
+    Department, 
+    DepartmentPhoto,
+    fields=['image', 'caption'],
+    extra=3, # Allow adding 3 photos at a time
+    can_delete=True,
+    widgets={
+        'image': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+        'caption': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Photo caption (optional)'}),
+    }
+)
