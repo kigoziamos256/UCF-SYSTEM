@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import ServiceSchedule, ServiceFlyer, ServiceAttendance, GuestAttendance
 from .models import (
-    Member, Department, Event, Duty, Announcement, Notification,
+    Member, Department, DepartmentPhoto Event, Duty, Announcement, Notification,
     Attendance, Currency, IncomeCategory, ExpenseCategory, Vendor,
     FinancialTransaction, FinanceSummary, Budget, ExpenseRequisition,
     BankReconciliation
@@ -324,6 +324,17 @@ class ServiceFlyerAdmin(admin.ModelAdmin):
 class ServiceAttendanceAdmin(admin.ModelAdmin):
     list_display = ('member', 'service', 'service_date', 'session', 'check_in_time')
     list_filter = ('service', 'session', 'service_date')
+
+
+class DepartmentPhotoInline(admin.TabularInline):
+    model = DepartmentPhoto
+    extra = 1
+
+@admin.register(Department)
+class DepartmentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'leadership_structure')
+    search_fields = ('name',)
+    inlines = [DepartmentPhotoInline]
 
 
 @admin.register(GuestAttendance)
