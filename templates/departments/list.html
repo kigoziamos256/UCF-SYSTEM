@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Our Departments{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4" style="color: var(--brand-purple);"><i class="bi bi-diagram-3"></i> Our Ministries</h2>
+    <div class="row g-4">
+        {% for dept in departments %}
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0">
+                {% if dept.cover_image %}
+                    <img src="{{ dept.cover_image.url }}" class="card-img-top" style="height: 180px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title" style="color: var(--brand-purple);">{{ dept.name }}</h5>
+                    <p class="card-text text-muted">{{ dept.profile_writeup|truncatechars:100|default:"Click to read more about this ministry." }}</p>
+                    <a href="{% url 'department_detail' dept.id %}" class="btn btn-sm text-white" style="background-color: var(--brand-purple);">View Profile</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12"><p class="text-muted">No departments created yet.</p></div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
