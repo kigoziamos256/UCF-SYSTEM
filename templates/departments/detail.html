@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}{{ department.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card shadow-sm border-0 mb-4">
+        {% if department.cover_image %}
+            <img src="{{ department.cover_image.url }}" class="card-img-top" style="height: 300px; object-fit: cover;">
+        {% endif %}
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 style="color: var(--brand-purple);">{{ department.name }}</h1>
+                {% if can_edit %}
+                    <a href="{% url 'department_edit' department.id %}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil"></i> Edit Profile
+                    </a>
+                {% endif %}
+            </div>
+
+            <h4 class="mt-4">Leadership & Structure</h4>
+            <p>{{ department.leadership_structure|linebreaks|default:"Information coming soon." }}</p>
+
+            <h4 class="mt-4">About the Ministry</h4>
+            <p>{{ department.profile_writeup|linebreaks|default:"Information coming soon." }}</p>
+
+            <h4 class="mt-4">Stories & Testimonies</h4>
+            <p class="fst-italic text-muted">{{ department.stories_and_experiences|linebreaks|default:"No stories shared yet." }}</p>
+        </div>
+    </div>
+
+    <!-- Photo Album -->
+    <h3 class="mb-3">Photo Gallery</h3>
+    <div class="row g-3">
+        {% for photo in photos %}
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <img src="{{ photo.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover; cursor: pointer;" onclick="window.open(this.src, '_blank');">
+                {% if photo.caption %}
+                <div class="card-footer bg-white text-center text-muted small">{{ photo.caption }}</div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12"><p class="text-muted">No photos uploaded yet.</p></div>
+        {% endfor %}
+    </div>
+    
+    <a href="{% url 'department_list_view' %}" class="btn btn-outline-secondary mt-4"><i class="bi bi-arrow-left"></i> Back to Ministries</a>
+</div>
+{% endblock %}
