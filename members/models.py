@@ -10,11 +10,43 @@ from imagekit.processors import ResizeToFill
 # ==================== DEPARTMENT ====================
 class Department(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, help_text="Short description")
+    
+    # New Profile Fields
+    leadership_structure = models.TextField(blank=True, help_text="Names of leaders and units")
+    profile_writeup = models.TextField(blank=True, help_text="Introduction, purpose, and responsibilities")
+    stories_and_experiences = models.TextField(blank=True, help_text="Testimonies and stories")
+    
+    # Cover Image
+    cover_image = ProcessedImageField(
+        upload_to='department_covers/',
+        processors=[ResizeToFill(800, 400)],
+        format='JPEG',
+        options={'quality': 85},
+        null=True, blank=True
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
 
+
+class DepartmentPhoto(models.Model):
+    """For departmental photo albums"""
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='photos')
+    image = ProcessedImageField(
+        upload_to='department_gallery/',
+        processors=[ResizeToFill(800, 600)],
+        format='JPEG',
+        options={'quality': 85},
+    )
+    caption = models.CharField(max_length=200, blank=True, help_text="e.g., 'Youth Camp 2026'")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.department.name} - Photo"
 
 # ==================== MEMBER ====================
 class Member(models.Model):
