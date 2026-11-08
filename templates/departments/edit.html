@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Edit {{ department.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow border-0">
+                <div class="card-header text-white" style="background-color: var(--brand-purple);">
+                    <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Edit Department: {{ department.name }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <h5 class="text-muted border-bottom pb-2 mb-3">Department Info</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            {{ form.name }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Leadership & Structure</label>
+                            {{ form.leadership_structure }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Profile Write-up</label>
+                            {{ form.profile_writeup }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Stories & Testimonies</label>
+                            {{ form.stories_and_experiences }}
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Cover Image</label>
+                            {{ form.cover_image }}
+                        </div>
+
+                        <h5 class="text-muted border-bottom pb-2 mb-3 mt-5">Photo Gallery (Upload up to 3 at a time)</h5>
+                        {{ formset.management_form }}
+                        {% for f in formset %}
+                            <div class="row align-items-center mb-2 bg-light p-2 rounded">
+                                <div class="col-md-5">{{ f.image }}</div>
+                                <div class="col-md-5">{{ f.caption }}</div>
+                                <div class="col-md-2 text-center">
+                                    {% if f.instance.pk %}{{ f.DELETE }} <label class="text-danger small">Delete</label>{% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'department_detail' department.id %}" class="btn btn-secondary me-md-2">Cancel</a>
+                            <button type="submit" class="btn text-white" style="background-color: var(--brand-purple);">
+                                <i class="bi bi-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
