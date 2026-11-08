@@ -240,7 +240,8 @@ def dashboard_view(request):
         "attendance_present": attendance_present,
         "attendance_late": attendance_late,
         "attendance_absent": attendance_absent,
-        "departments": departments,  # 👈 Added to context
+        "departments": Department.objects.all()[:4],  # 👈 Added to context
+        
     }
     return render(request, "dashboard.html", context)
 
