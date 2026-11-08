@@ -84,4 +84,9 @@ urlpatterns = [
 
     # Duty completion
     path('duty/<int:duty_id>/complete/', views.mark_duty_complete, name='mark_duty_complete'),
+
+    # ==================== DEPARTMENT PROFILES ====================
+    path('departments/', views.department_list_view, name='department_list_view'),
+    path('departments/<int:dept_id>/', views.department_detail_view, name='department_detail'),
+    path('departments/<int:dept_id>/edit/', views.department_edit_view, name='department_edit'),
 ]
