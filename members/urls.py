@@ -89,4 +89,13 @@ urlpatterns = [
     path('departments/', views.department_list_view, name='department_list_view'),
     path('departments/<int:dept_id>/', views.department_detail_view, name='department_detail'),
     path('departments/<int:dept_id>/edit/', views.department_edit_view, name='department_edit'),
+    # ==================== MEDIA HUB ====================
+    path('media/', views.media_dashboard, name='media_dashboard'),
+    path('media/equipment/', views.equipment_list, name='equipment_list'),
+    path('media/equipment/add/', views.equipment_add, name='equipment_add'),
+    path('media/lend/', views.lend_equipment, name='lend_equipment'),
+    path('media/return/<int:loan_id>/', views.return_equipment, name='return_equipment'),
+    path('media/external-events/', views.external_events_list, name='external_events_list'),
+    path('media/external-events/add/', views.add_external_event, name='add_external_event'),
+
 ]
