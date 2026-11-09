@@ -200,6 +200,14 @@
                             <i class="bi bi-qr-code-scan"></i> Scan Attendance
                         </a></li>
                         {% endif %}
+                        
+                        <!-- ========== MEDIA HUB LINK ========== -->
+                        {% if user.member.role == 'admin' or user.member.department and 'media' in user.member.department.name|lower %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'media_dashboard' %}">
+                            <i class="bi bi-camera-video"></i> Media Hub
+                        </a></li>
+                        {% endif %}
                     </ul>
                 </li>
                 
@@ -418,6 +426,7 @@
         });
     })();
 </script>
+
 {% if user.is_authenticated %}
 <!-- WhatsApp-style toast container -->
 <div id="toast-container"></div>
