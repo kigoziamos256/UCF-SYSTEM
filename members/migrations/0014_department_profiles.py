@@ -7,7 +7,7 @@ from imagekit.processors import ResizeToFill
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('members', '0013_member_avatar_url'),  # 👈 MAKE SURE THIS MATCHES YOUR ACTUAL LAST MIGRATION
+        ('members', '0013_member_avatar_urls'),  # 👈 MAKE SURE THIS MATCHES YOUR ACTUAL LAST MIGRATION
     ]
 
     operations = [
