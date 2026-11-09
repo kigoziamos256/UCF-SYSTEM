@@ -5,6 +5,7 @@ from django.contrib.auth.forms import UserCreationForm
 from .models import ServiceFlyer, ServiceSchedule
 from django.forms import inlineformset_factory
 from .models import Department, DepartmentPhoto
+from .models import EquipmentCategory, Equipment, EquipmentLoan, ExternalEvent
 
 from .models import (
     FinancialTransaction, Budget, ExpenseRequisition, BankReconciliation,
@@ -249,3 +250,47 @@ DepartmentPhotoFormSet = inlineformset_factory(
         'caption': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Photo caption (optional)'}),
     }
 )
+
+
+
+class EquipmentForm(forms.ModelForm):
+    class Meta:
+        model = Equipment
+        fields = ['name', 'category', 'serial_number', 'status', 'purchase_date', 'notes']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
+            'serial_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+            'purchase_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+class EquipmentLoanForm(forms.ModelForm):
+    class Meta:
+        model = EquipmentLoan
+        fields = ['equipment', 'borrower_name', 'borrower_phone', 'expected_return']
+        widgets = {
+            'equipment': forms.Select(attrs={'class': 'form-control'}),
+            'borrower_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'borrower_phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'expected_return': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only show equipment that is currently available
+        self.fields['equipment'].queryset = Equipment.objects.filter(status='available')
+
+class ExternalEventForm(forms.ModelForm):
+    class Meta:
+        model = ExternalEvent
+        fields = ['title', 'event_date', 'location', 'services_offered', 'contact_person', 'contact_phone']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'event_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'location': forms.TextInput(attrs={'class': 'form-control'}),
+            'services_offered': forms.TextInput(attrs={'class': 'form-control'}),
+            'contact_person': forms.TextInput(attrs={'class': 'form-control'}),
+            'contact_phone': forms.TextInput(attrs={'class': 'form-control'}),
+        }
