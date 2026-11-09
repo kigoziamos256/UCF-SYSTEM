@@ -1,10 +1,10 @@
 from django.contrib import admin
-from .models import ServiceSchedule, ServiceFlyer, ServiceAttendance, GuestAttendance
 from .models import (
-    Member, Department, DepartmentPhoto Event, Duty, Announcement, Notification,
+    Member, Department, DepartmentPhoto, Event, Duty, Announcement, Notification,
     Attendance, Currency, IncomeCategory, ExpenseCategory, Vendor,
     FinancialTransaction, FinanceSummary, Budget, ExpenseRequisition,
-    BankReconciliation
+    BankReconciliation, ServiceSchedule, ServiceFlyer, ServiceAttendance,
+    GuestAttendance
 )
 
 
@@ -78,10 +78,15 @@ class MemberAdmin(admin.ModelAdmin):
 
 
 # ==================== DEPARTMENT ====================
+class DepartmentPhotoInline(admin.TabularInline):
+    model = DepartmentPhoto
+    extra = 1
+
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'member_count')
+    list_display = ('name', 'leadership_structure', 'member_count')
     search_fields = ('name', 'description')
+    inlines = [DepartmentPhotoInline]
     
     def member_count(self, obj):
         return obj.members.count()
@@ -189,7 +194,6 @@ class CurrencyAdmin(admin.ModelAdmin):
 
 
 # ==================== FINANCE MODELS ====================
-
 @admin.register(IncomeCategory)
 class IncomeCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'code', 'is_active')
@@ -307,6 +311,7 @@ class BankReconciliationAdmin(admin.ModelAdmin):
     mark_as_reconciled.short_description = "Mark selected as reconciled"
 
 
+# ==================== SERVICES ====================
 @admin.register(ServiceSchedule)
 class ServiceScheduleAdmin(admin.ModelAdmin):
     list_display = ('label', 'day_of_week', 'start_time', 'end_time', 'is_active')
@@ -324,17 +329,6 @@ class ServiceFlyerAdmin(admin.ModelAdmin):
 class ServiceAttendanceAdmin(admin.ModelAdmin):
     list_display = ('member', 'service', 'service_date', 'session', 'check_in_time')
     list_filter = ('service', 'session', 'service_date')
-
-
-class DepartmentPhotoInline(admin.TabularInline):
-    model = DepartmentPhoto
-    extra = 1
-
-@admin.register(Department)
-class DepartmentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'leadership_structure')
-    search_fields = ('name',)
-    inlines = [DepartmentPhotoInline]
 
 
 @admin.register(GuestAttendance)
