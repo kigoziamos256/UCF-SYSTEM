@@ -1,11 +1,13 @@
+import django.db.models.deletion
 from django.db import migrations, models
 import imagekit.models.fields
 from imagekit.processors import ResizeToFill
 
+
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('members', '0013_member_avatar_urls.py'),  # 👈 CHANGE THIS to your actual last migration name!
+        ('members', '0013_member_avatar_url'),  # 👈 MAKE SURE THIS MATCHES YOUR ACTUAL LAST MIGRATION
     ]
 
     operations = [
