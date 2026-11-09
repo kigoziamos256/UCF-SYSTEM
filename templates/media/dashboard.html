@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Media Hub{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 style="color: var(--brand-purple);"><i class="bi bi-camera-video"></i> Media Department Hub</h2>
+        <div>
+            <a href="{% url 'equipment_add' %}" class="btn text-white" style="background-color: var(--brand-purple);"><i class="bi bi-plus-lg"></i> Add Equipment</a>
+            <a href="{% url 'lend_equipment' %}" class="btn btn-warning"><i class="bi bi-box-arrow-up"></i> Lend Equipment</a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ total_equipment }}</h3>
+                    <p class="mb-0">Total Equipment</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h3>{{ lent_equipment }}</h3>
+                    <p class="mb-0">Currently Lent Out</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>{{ upcoming_events.count }}</h3>
+                    <p class="mb-0">Upcoming External Events</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between">
+                    <h5 class="mb-0">Active Loans</h5>
+                    <a href="{% url 'equipment_list' %}" class="btn btn-sm btn-outline-secondary">View Inventory</a>
+                </div>
+                <div class="card-body">
+                    {% if active_loans %}
+                        <ul class="list-group">
+                        {% for loan in active_loans %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ loan.equipment.name }}</strong><br>
+                                    <small class="text-muted">To: {{ loan.borrower_name }} ({{ loan.borrower_phone }})</small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-danger d-block mb-1">Due: {{ loan.expected_return|date:"M d, H:i" }}</small>
+                                    <form method="post" action="{% url 'return_equipment' loan.id %}">
+                                        {% csrf_token %}
+                                        <button class="btn btn-sm btn-success">Mark Returned</button>
+                                    </form>
+                                </div>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted text-center">No active loans.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between">
+                    <h5 class="mb-0">Upcoming External Events</h5>
+                    <a href="{% url 'add_external_event' %}" class="btn btn-sm text-white" style="background-color: var(--brand-purple);">Register Event</a>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_events %}
+                        <ul class="list-group">
+                        {% for event in upcoming_events %}
+                            <li class="list-group-item">
+                                <strong>{{ event.title }}</strong> - {{ event.event_date|date:"M d, Y" }}<br>
+                                <small class="text-muted">{{ event.location }} | Services: {{ event.services_offered }}</small>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted text-center">No upcoming external events.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
