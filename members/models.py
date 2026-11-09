@@ -829,3 +829,67 @@ def parse_member_qr_payload(payload):
     if member_qr_token(member_id) != token:
         return None
     return member_id
+
+
+# ==================== MEDIA DEPARTMENT ====================
+
+class EquipmentCategory(models.Model):
+    name = models.CharField(max_length=50, unique=True) # e.g., Sound, Visuals, Graphics, Lighting
+    description = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name_plural = "Equipment Categories"
+
+    def __str__(self):
+        return self.name
+
+class Equipment(models.Model):
+    STATUS_CHOICES = (
+        ('available', 'Available'),
+        ('lent', 'Lent Out'),
+        ('maintenance', 'Under Maintenance'),
+    )
+    name = models.CharField(max_length=100)
+    category = models.ForeignKey(EquipmentCategory, on_delete=models.CASCADE, related_name='equipment')
+    serial_number = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
+    purchase_date = models.DateField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['category__name', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.category.name})"
+
+class EquipmentLoan(models.Model):
+    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='loans')
+    borrower_name = models.CharField(max_length=100)
+    borrower_phone = models.CharField(max_length=20)
+    date_lent = models.DateTimeField(default=timezone.now)
+    expected_return = models.DateTimeField()
+    actual_return = models.DateTimeField(null=True, blank=True)
+    authorized_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='authorized_loans')
+    
+    class Meta:
+        ordering = ['-date_lent']
+
+    def __str__(self):
+        return f"{self.equipment.name} lent to {self.borrower_name}"
+
+class ExternalEvent(models.Model):
+    title = models.CharField(max_length=200)
+    event_date = models.DateField()
+    location = models.CharField(max_length=200)
+    services_offered = models.CharField(max_length=200, help_text="e.g., Sound, Lighting, Video")
+    contact_person = models.CharField(max_length=100)
+    contact_phone = models.CharField(max_length=20)
+    is_completed = models.BooleanField(default=False)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-event_date']
+
+    def __str__(self):
+        return f"{self.title} - {self.event_date}"
