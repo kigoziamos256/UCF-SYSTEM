@@ -1058,3 +1058,122 @@ def attendance_export_csv(request):
             (a.checked_by.get_full_name() or a.checked_by.username) if a.checked_by else '—',
         ])
     return response
+
+
+# ============================================================
+# MEDIA DEPARTMENT MANAGEMENT
+# ============================================================
+
+from .models import EquipmentCategory, Equipment, EquipmentLoan, ExternalEvent
+from .forms import EquipmentForm, EquipmentLoanForm, ExternalEventForm
+
+def media_required(view_func):
+    """Allows access only to Admins and Leaders in the Media Department."""
+    def wrapper(request, *args, **kwargs):
+        if request.user.is_authenticated and hasattr(request.user, 'member'):
+            member = request.user.member
+            if member.role == 'admin':
+                return view_func(request, *args, **kwargs)
+            if member.role == 'leader' and member.department and 'media' in member.department.name.lower():
+                return view_func(request, *args, **kwargs)
+        raise PermissionDenied("You do not have access to the Media Hub.")
+    return wrapper
+
+@login_required
+@media_required
+def media_dashboard(request):
+    """Main dashboard for the Media Team."""
+    categories = EquipmentCategory.objects.all()
+    total_equipment = Equipment.objects.count()
+    lent_equipment = Equipment.objects.filter(status='lent').count()
+    
+    # Active loans (not returned yet)
+    active_loans = EquipmentLoan.objects.filter(actual_return__isnull=True).order_by('expected_return')
+    
+    # Upcoming external events
+    today = timezone.now().date()
+    upcoming_events = ExternalEvent.objects.filter(event_date__gte=today, is_completed=False).order_by('event_date')
+
+    return render(request, 'media/dashboard.html', {
+        'categories': categories,
+        'total_equipment': total_equipment,
+        'lent_equipment': lent_equipment,
+        'active_loans': active_loans,
+        'upcoming_events': upcoming_events,
+    })
+
+@login_required
+@media_required
+def equipment_list(request):
+    """List all equipment grouped by category."""
+    categories = EquipmentCategory.objects.prefetch_related('equipment').all()
+    return render(request, 'media/equipment_list.html', {'categories': categories})
+
+@login_required
+@media_required
+def equipment_add(request):
+    if request.method == 'POST':
+        form = EquipmentForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Equipment added successfully.")
+            return redirect('equipment_list')
+    else:
+        form = EquipmentForm()
+    return render(request, 'media/equipment_form.html', {'form': form, 'title': 'Add New Equipment'})
+
+@login_required
+@media_required
+def lend_equipment(request):
+    if request.method == 'POST':
+        form = EquipmentLoanForm(request.POST)
+        if form.is_valid():
+            loan = form.save(commit=False)
+            loan.authorized_by = request.user
+            loan.save()
+            
+            # Update equipment status
+            loan.equipment.status = 'lent'
+            loan.equipment.save()
+            
+            messages.success(request, f"{loan.equipment.name} lent to {loan.borrower_name}.")
+            return redirect('media_dashboard')
+    else:
+        form = EquipmentLoanForm()
+    return render(request, 'media/equipment_form.html', {'form': form, 'title': 'Lend Equipment'})
+
+@login_required
+@media_required
+@require_POST
+def return_equipment(request, loan_id):
+    loan = get_object_or_404(EquipmentLoan, id=loan_id)
+    if not loan.actual_return:
+        loan.actual_return = timezone.now()
+        loan.save()
+        
+        # Update equipment status back to available
+        loan.equipment.status = 'available'
+        loan.equipment.save()
+        messages.success(request, f"{loan.equipment.name} returned successfully.")
+    return redirect('media_dashboard')
+
+@login_required
+@media_required
+def external_events_list(request):
+    events = ExternalEvent.objects.all().order_by('-event_date')
+    return render(request, 'media/external_events.html', {'events': events})
+
+@login_required
+@media_required
+def add_external_event(request):
+    if request.method == 'POST':
+        form = ExternalEventForm(request.POST)
+        if form.is_valid():
+            event = form.save(commit=False)
+            event.created_by = request.user
+            event.save()
+            messages.success(request, "External event registered.")
+            return redirect('external_events_list')
+    else:
+        form = ExternalEventForm()
+    return render(request, 'media/equipment_form.html', {'form': form, 'title': 'Register External Event'})
