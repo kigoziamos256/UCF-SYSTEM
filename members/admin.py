@@ -1,4 +1,5 @@
 from django.contrib import admin
+from .models import EquipmentCategory, Equipment, EquipmentLoan, ExternalEvent
 from .models import (
     Member, Department, DepartmentPhoto, Event, Duty, Announcement, Notification,
     Attendance, Currency, IncomeCategory, ExpenseCategory, Vendor,
@@ -335,3 +336,24 @@ class ServiceAttendanceAdmin(admin.ModelAdmin):
 class GuestAttendanceAdmin(admin.ModelAdmin):
     list_display = ('name', 'service', 'service_date', 'session', 'converted_to_member')
     list_filter = ('service', 'service_date')
+
+
+@admin.register(EquipmentCategory)
+class EquipmentCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+
+@admin.register(Equipment)
+class EquipmentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category', 'status', 'serial_number')
+    list_filter = ('category', 'status')
+    search_fields = ('name', 'serial_number')
+
+@admin.register(EquipmentLoan)
+class EquipmentLoanAdmin(admin.ModelAdmin):
+    list_display = ('equipment', 'borrower_name', 'date_lent', 'expected_return', 'actual_return')
+    list_filter = ('actual_return',)
+
+@admin.register(ExternalEvent)
+class ExternalEventAdmin(admin.ModelAdmin):
+    list_display = ('title', 'event_date', 'location', 'is_completed')
+    list_filter = ('event_date', 'is_completed')
