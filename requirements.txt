@@ -24,4 +24,4 @@ django-pwa
 pillow-heif
 qrcode[pil]
 django-allauth[socialaccount]
-weasyprint
+xhtml2pdf
