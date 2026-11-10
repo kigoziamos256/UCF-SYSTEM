@@ -59,6 +59,16 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const splash = document.getElementById('ucf-splash');
+        
+        // 👇 CHECK IF SPLASH WAS ALREADY SHOWN THIS SESSION
+        if (sessionStorage.getItem('ucfSplashShown')) {
+            splash.style.display = 'none';
+            return; // Stop here, don't show it again!
+        }
+
+        // Mark it as shown for this session
+        sessionStorage.setItem('ucfSplashShown', 'true');
+
         const progress = document.getElementById('ucf-progress');
         const skipBtn = document.getElementById('ucf-skip');
 
@@ -71,7 +81,7 @@
         const timer = setTimeout(function () {
             splash.style.opacity = '0';
             splash.style.visibility = 'hidden';
-        }, 2000);
+        }, 20000);
 
         // Allow users to skip the splash
         skipBtn.addEventListener('click', function () {
