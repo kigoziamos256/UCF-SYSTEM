@@ -3,170 +3,137 @@
 <head>
     <meta charset="utf-8">
     <style>
-        /* Define Brand Colors */
-        :root {
-            --brand-purple: #6B1F2E;
-            --brand-gold: #C9A227;
-        }
-
         @page {
             size: A4;
             margin: 2cm;
-            @bottom-right {
-                content: "Page " counter(page) " of " counter(pages);
-                font-family: Arial, sans-serif;
-                font-size: 10px;
-                color: #888;
-            }
-            @bottom-left {
-                content: "University Community Fellowship";
-                font-family: Arial, sans-serif;
-                font-size: 10px;
-                color: #888;
-            }
+            /* Watermark */
+            background-image: url('{{ logo_url }}');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 500px; /* Adjust to make it subtle */
         }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: Helvetica, Arial, sans-serif;
             color: #333;
-            position: relative;
-        }
-
-        /* Watermark */
-        .watermark {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            opacity: 0.05;
-            width: 500px;
-            z-index: -1;
         }
 
         /* Header */
         .header {
             text-align: center;
             border-bottom: 3px solid #6B1F2E;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
         }
         .header img {
-            width: 80px;
-            height: 80px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
         }
         .header h1 {
             color: #6B1F2E;
-            margin: 10px 0 5px 0;
-            font-size: 24px;
+            margin: 5px 0;
+            font-size: 20px;
             letter-spacing: 1px;
         }
         .header h2 {
             color: #C9A227;
             margin: 0;
-            font-size: 16px;
+            font-size: 12px;
             font-weight: normal;
-            letter-spacing: 2px;
         }
 
-        /* Summary Boxes */
-        .summary-container {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 30px;
+        /* Summary Table */
+        .summary-table {
+            width: 100%;
+            margin-bottom: 25px;
+            text-align: center;
+            border-collapse: collapse;
         }
-        .summary-box {
+        .summary-table td {
+            width: 25%;
+            padding: 10px;
             background-color: #f8f9fa;
             border-top: 3px solid #6B1F2E;
-            padding: 15px;
-            text-align: center;
-            width: 23%;
-            border-radius: 4px;
         }
-        .summary-box h3 {
+        .summary-table h3 {
             margin: 0;
             color: #6B1F2E;
-            font-size: 20px;
+            font-size: 18px;
         }
-        .summary-box p {
-            margin: 5px 0 0 0;
-            font-size: 12px;
+        .summary-table p {
+            margin: 2px 0 0 0;
+            font-size: 10px;
             color: #666;
         }
 
-        /* Table */
-        table {
+        /* Main Data Table */
+        .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
-            font-size: 12px;
+            font-size: 11px;
         }
-        th {
+        .data-table th {
             background-color: #6B1F2E;
             color: white;
+            padding: 8px;
             text-align: left;
-            padding: 10px;
         }
-        td {
-            padding: 8px 10px;
+        .data-table td {
+            padding: 6px 8px;
             border-bottom: 1px solid #ddd;
         }
-        tr:nth-child(even) {
+        .data-table tr:nth-child(even) {
             background-color: #fcfcfc;
         }
 
-        .footer-note {
+        .footer {
             text-align: center;
-            font-size: 11px;
+            font-size: 10px;
             color: #888;
-            margin-top: 40px;
+            margin-top: 30px;
             border-top: 1px solid #eee;
-            padding-top: 10px;
+            padding-top: 8px;
         }
     </style>
 </head>
 <body>
-
-    <!-- Watermark Logo -->
-    <img src="{{ logo_url }}" class="watermark" alt="Watermark">
 
     <!-- Header -->
     <div class="header">
         <img src="{{ logo_url }}" alt="UCF Logo">
         <h1>UNIVERSITY COMMUNITY FELLOWSHIP</h1>
         <h2>Friends for Life · Fellowship · Service · Stewardship</h2>
-        <p style="margin-top: 10px; font-size: 14px; color: #555;">
+        <p style="margin-top: 10px; font-size: 12px; color: #555;">
             <strong>Attendance Report</strong> 
-            {% if from_date or to_date %}
-                ({{ from_date|default:"All" }} to {{ to_date|default:"Present" }})
-            {% else %}
-                (All Time)
-            {% endif %}
+            ({% if from_date or to_date %}{{ from_date|default:"All" }} to {{ to_date|default:"Present" }}{% else %}All Time{% endif %})
         </p>
     </div>
 
     <!-- Summary -->
-    <div class="summary-container">
-        <div class="summary-box">
-            <h3>{{ summary.total }}</h3>
-            <p>Total Check-ins</p>
-        </div>
-        <div class="summary-box">
-            <h3>{{ summary.unique_members }}</h3>
-            <p>Unique Members</p>
-        </div>
-        <div class="summary-box">
-            <h3>{{ summary.first|add:summary.second }}</h3>
-            <p>Sunday Attendees</p>
-        </div>
-        <div class="summary-box">
-            <h3>{{ summary.midweek }}</h3>
-            <p>Mid-Week Attendees</p>
-        </div>
-    </div>
+    <table class="summary-table">
+        <tr>
+            <td>
+                <h3>{{ summary.total }}</h3>
+                <p>Total Check-ins</p>
+            </td>
+            <td>
+                <h3>{{ summary.unique_members }}</h3>
+                <p>Unique Members</p>
+            </td>
+            <td>
+                <h3>{{ summary.first|add:summary.second }}</h3>
+                <p>Sunday Attendees</p>
+            </td>
+            <td>
+                <h3>{{ summary.midweek }}</h3>
+                <p>Mid-Week Attendees</p>
+            </td>
+        </tr>
+    </table>
 
     <!-- Data Table -->
-    <table>
+    <table class="data-table">
         <thead>
             <tr>
                 <th>#</th>
@@ -200,7 +167,7 @@
         </tbody>
     </table>
 
-    <div class="footer-note">
+    <div class="footer">
         Report generated on {{ generated_on|date:"F d, Y \a\t H:i" }} by {{ request.user.get_full_name|default:request.user.username }}.
     </div>
 
