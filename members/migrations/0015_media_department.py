@@ -7,7 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('members', '0014_department_profiles'),  # 👈 CHANGE to match your last migration
+        ('members', '0014_department_profiles'),  # 👈 Check this name matches your last migration!
     ]
 
     operations = [
@@ -19,19 +19,6 @@ class Migration(migrations.Migration):
                 ('description', models.TextField(blank=True)),
             ],
             options={'verbose_name_plural': 'Equipment Categories'},
-        ),
-        migrations.CreateModel(
-            name='Equipment',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
-                ('serial_number', models.CharField(blank=True, max_length=100, null=True, unique=True)),
-                ('status', models.CharField(choices=[('available', 'Available'), ('lent', 'Lent Out'), ('maintenance', 'Under Maintenance')], default='available', max_length=20)),
-                ('purchase_date', models.DateField(blank=True, null=True)),
-                ('notes', models.TextField(blank=True)),
-                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='equipment', to='members.equipmentcategory')),
-            ],
-            options={'ordering': ['category__name', 'name']},
         ),
         migrations.CreateModel(
             name='ExternalEvent',
@@ -48,6 +35,19 @@ class Migration(migrations.Migration):
                 ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
             ],
             options={'ordering': ['-event_date']},
+        ),
+        migrations.CreateModel(
+            name='Equipment',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(max_length=100)),
+                ('serial_number', models.CharField(blank=True, max_length=100, null=True, unique=True)),
+                ('status', models.CharField(choices=[('available', 'Available'), ('lent', 'Lent Out'), ('maintenance', 'Under Maintenance')], default='available', max_length=20)),
+                ('purchase_date', models.DateField(blank=True, null=True)),
+                ('notes', models.TextField(blank=True)),
+                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='equipment', to='members.equipmentcategory')),
+            ],
+            options={'ordering': ['category__name', 'name']},
         ),
         migrations.CreateModel(
             name='EquipmentLoan',
