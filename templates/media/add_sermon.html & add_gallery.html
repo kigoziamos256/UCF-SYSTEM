@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4" style="max-width: 700px;">
+    <div class="card shadow border-0">
+        <div class="card-header text-white" style="background-color: var(--brand-purple);">
+            <h4 class="mb-0">Add New Content</h4>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.as_p }}
+                {% if formset %}{{ formset.management_form }}{% for f in formset %}{{ f.as_p }}{% endfor %}{% endif %}
+                <button type="submit" class="btn text-white w-100" style="background-color: var(--brand-purple);">Save</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
