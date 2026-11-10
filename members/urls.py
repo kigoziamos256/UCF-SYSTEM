@@ -97,5 +97,6 @@ urlpatterns = [
     path('media/return/<int:loan_id>/', views.return_equipment, name='return_equipment'),
     path('media/external-events/', views.external_events_list, name='external_events_list'),
     path('media/external-events/add/', views.add_external_event, name='add_external_event'),
+    path('attendance/email-report/', views.email_attendance_report, name='email_attendance_report'),
 
 ]
