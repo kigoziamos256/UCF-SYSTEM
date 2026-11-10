@@ -11,6 +11,8 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.urls import reverse
 from django.core.files.base import ContentFile
+from django.core.mail import EmailMessage
+from .utils import send_ucf_email
 
 import qrcode
 import io
@@ -1177,3 +1179,54 @@ def add_external_event(request):
     else:
         form = ExternalEventForm()
     return render(request, 'media/equipment_form.html', {'form': form, 'title': 'Register External Event'})
+
+
+@login_required
+def email_attendance_report(request):
+    """Generates today's attendance summary and emails it to Admins and Usher Leaders."""
+    if not (request.user.member.role in ['admin', 'leader']):
+        raise PermissionDenied
+        
+    today = timezone.localdate()
+    attendance = ServiceAttendance.objects.filter(service_date=today)
+    
+    if not attendance.exists():
+        messages.warning(request, "No attendance recorded today yet.")
+        return redirect('dashboard')
+
+    # Get summary data
+    total = attendance.count()
+    unique = attendance.values('member').distinct().count()
+    first = attendance.filter(session='first').count()
+    second = attendance.filter(session='second').count()
+    midweek = attendance.filter(session='midweek').count()
+
+    # Build the email body
+    report_text = (
+        f"UCF Attendance Report for {today.strftime('%B %d, %Y')}\n\n"
+        f"Total Check-ins: {total}\n"
+        f"Unique Members: {unique}\n\n"
+        f"First Service: {first}\n"
+        f"Second Service: {second}\n"
+        f"Mid-Week: {midweek}\n\n"
+        f"Please log in to the app for the full detailed list."
+    )
+
+    # Find recipients (Admins + Usher Leaders)
+    recipients = list(Member.objects.filter(role='admin').values_list('user__email', flat=True))
+    
+    # Try to find the Usher Department and its leader
+    usher_dept = Department.objects.filter(name__icontains='usher').first()
+    if usher_dept:
+        usher_leaders = usher_dept.members.filter(role__in=['leader', 'admin']).values_list('user__email', flat=True)
+        recipients.extend(usher_leaders)
+
+    # Clean list and send
+    recipients = [email for email in set(recipients) if email]
+    if recipients:
+        send_ucf_email(f"Attendance Report - {today}", report_text, recipients)
+        messages.success(request, f"Attendance report emailed to {len(recipients)} recipients.")
+    else:
+        messages.error(request, "No valid email addresses found for Admins or Usher Leaders.")
+
+    return redirect('dashboard')
