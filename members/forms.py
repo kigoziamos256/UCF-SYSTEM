@@ -6,6 +6,7 @@ from .models import ServiceFlyer, ServiceSchedule
 from django.forms import inlineformset_factory
 from .models import Department, DepartmentPhoto
 from .models import EquipmentCategory, Equipment, EquipmentLoan, ExternalEvent
+from .models import Sermon, ServiceGallery, GalleryPhoto
 
 from .models import (
     FinancialTransaction, Budget, ExpenseRequisition, BankReconciliation,
@@ -294,3 +295,32 @@ class ExternalEventForm(forms.ModelForm):
             'contact_person': forms.TextInput(attrs={'class': 'form-control'}),
             'contact_phone': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+
+class SermonForm(forms.ModelForm):
+    class Meta:
+        model = Sermon
+        fields = ['title', 'preacher', 'date_preached', 'youtube_url', 'notes']
+        widgets = {
+            'date_preached': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'preacher': forms.TextInput(attrs={'class': 'form-control'}),
+            'youtube_url': forms.URLInput(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
+        }
+
+class ServiceGalleryForm(forms.ModelForm):
+    class Meta:
+        model = ServiceGallery
+        fields = ['title', 'service_date', 'description']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'service_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+GalleryPhotoFormSet = inlineformset_factory(
+    ServiceGallery, GalleryPhoto, fields=['image', 'caption'], extra=5, can_delete=True,
+    widgets={'image': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+             'caption': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Caption'})}
+)
