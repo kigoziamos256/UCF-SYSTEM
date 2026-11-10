@@ -1328,7 +1328,6 @@ def start_direct_chat(request, user_id):
 @login_required
 @admin_required
 def download_attendance_pdf(request):
-    """Generate and download today's (or filtered) attendance report as a PDF."""
     from_date = request.GET.get('from')
     to_date = request.GET.get('to')
     service_id = request.GET.get('service')
@@ -1341,7 +1340,6 @@ def download_attendance_pdf(request):
     if service_id: qs = qs.filter(service_id=service_id)
     if session: qs = qs.filter(session=session)
 
-    # Calculate summary for the PDF
     summary = {
         'total': qs.count(),
         'unique_members': qs.values('member').distinct().count(),
@@ -1350,7 +1348,6 @@ def download_attendance_pdf(request):
         'midweek': qs.filter(session='midweek').count(),
     }
 
-    # Get absolute URLs for the images so WeasyPrint can find them
     logo_url = request.build_absolute_uri(static('images/ucf-logo.png'))
 
     context = {
@@ -1362,15 +1359,16 @@ def download_attendance_pdf(request):
         'to_date': to_date,
     }
 
-    # Render HTML
     html_string = render_to_string('services/attendance_pdf.html', context)
 
-    # Generate PDF
-    pdf_file = weasyprint.HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf()
-
-    # Return as downloadable file
-    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response = HttpResponse(content_type='application/pdf')
     filename = f"UCF_Attendance_{timezone.localdate()}.pdf"
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    
+
+    pisa_status = pisa.CreatePDF(html_string, dest=response)
+
+    if pisa_status.err:
+        return HttpResponse('Error generating PDF: <pre>' + html_string + '</pre>')
+
     return response
+
