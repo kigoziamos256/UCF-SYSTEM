@@ -1284,7 +1284,7 @@ def chat_room(request, room_id):
     user = request.user
     member = user.member
 
-    # Security Check: Ensure user belongs in this room
+    # Security Check
     if room.room_type == 'direct' and user not in room.participants.all():
         raise PermissionDenied
     elif room.room_type == 'department' and member.department != room.department:
@@ -1297,7 +1297,19 @@ def chat_room(request, room_id):
     if request.method == 'POST':
         content = request.POST.get('content', '').strip()
         if content:
-            Message.objects.create(room=room, sender=user, content=content)
+            msg = Message.objects.create(room=room, sender=user, content=content)
+            
+            # If the request is AJAX (from JavaScript), return JSON
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'status': 'success',
+                    'message': msg.content,
+                    'sender_id': user.id,
+                    'sender_name': user.get_full_name() or user.username,
+                    'time': msg.timestamp.strftime('%H:%M')
+                })
+            
+            # Fallback for normal form submission
             return redirect('chat_room', room_id=room.id)
 
     messages_list = room.messages.all().order_by('timestamp')
