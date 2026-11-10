@@ -16,7 +16,7 @@ from .utils import send_ucf_email
 from .models import ChatRoom, Message
 from django.template.loader import render_to_string
 from django.templatetags.static import static
-import weasyprint
+from xhtml2pdf import pisa
 
 import qrcode
 import io
