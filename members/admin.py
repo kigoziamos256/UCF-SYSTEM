@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import ChatRoom, Message
+from .models import Sermon, ServiceGallery, GalleryPhoto
 from .models import EquipmentCategory, Equipment, EquipmentLoan, ExternalEvent
 from .models import (
     Member, Department, DepartmentPhoto, Event, Duty, Announcement, Notification,
@@ -370,3 +371,18 @@ class ChatRoomAdmin(admin.ModelAdmin):
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('room', 'sender', 'timestamp')
     list_filter = ('room', 'timestamp')
+
+
+@admin.register(Sermon)
+class SermonAdmin(admin.ModelAdmin):
+    list_display = ('title', 'preacher', 'date_preached')
+    list_filter = ('preacher', 'date_preached')
+
+class GalleryPhotoInline(admin.TabularInline):
+    model = GalleryPhoto
+    extra = 3
+
+@admin.register(ServiceGallery)
+class ServiceGalleryAdmin(admin.ModelAdmin):
+    list_display = ('title', 'service_date')
+    inlines = [GalleryPhotoInline]
