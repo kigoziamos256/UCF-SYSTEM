@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}{{ gallery.title }}{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="text-center mb-4">
+        <h2 style="color: var(--brand-purple);">{{ gallery.title }}</h2>
+        <p class="text-muted">{{ gallery.service_date|date:"F d, Y" }}</p>
+        <p>{{ gallery.description }}</p>
+    </div>
+    <div class="row g-3">
+        {% for photo in gallery.photos.all %}
+        <div class="col-md-4 col-6">
+            <a href="{{ photo.image.url }}" target="_blank">
+                <img src="{{ photo.image.url }}" class="img-fluid rounded shadow-sm" style="height: 200px; width: 100%; object-fit: cover;">
+            </a>
+            {% if photo.caption %}
+            <p class="text-center text-muted small mt-1">{{ photo.caption }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    <div class="text-center mt-4">
+        <a href="{% url 'gallery_list' %}" class="btn btn-outline-secondary">Back to Galleries</a>
+    </div>
+</div>
+{% endblock %}
