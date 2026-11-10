@@ -35,9 +35,9 @@
         {% endfor %}
     </div>
 
-    <form method="post" class="d-flex gap-2">
+    <form id="chatForm" method="post" class="d-flex gap-2">
         {% csrf_token %}
-        <input type="text" name="content" class="form-control" placeholder="Type a message..." required autocomplete="off">
+        <input type="text" name="content" id="chatInput" class="form-control" placeholder="Type a message..." required autocomplete="off">
         <button type="submit" class="btn text-white" style="background-color: var(--brand-purple);">
             <i class="bi bi-send"></i> Send
         </button>
@@ -45,8 +45,54 @@
 </div>
 
 <script>
-    // Auto-scroll to bottom of chat
     const chatBox = document.getElementById('chatBox');
+    const chatForm = document.getElementById('chatForm');
+    const chatInput = document.getElementById('chatInput');
+    const currentUserId = {{ request.user.id }};
+    const isDirect = "{{ room.room_type }}" === "direct";
+
+    // Auto-scroll to bottom on load
     chatBox.scrollTop = chatBox.scrollHeight;
+
+    chatForm.addEventListener('submit', async function(e) {
+        e.preventDefault(); // Stop page reload
+        
+        const content = chatInput.value.trim();
+        if (!content) return;
+
+        const formData = new FormData(chatForm);
+        
+        try {
+            const response = await fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                // Create new message bubble
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'd-flex justify-content-end';
+                msgDiv.innerHTML = `
+                    <div class="message-bubble message-sent">
+                        ${data.message}
+                        <div class="text-end" style="font-size: 0.7rem; opacity: 0.7; margin-top: 5px;">
+                            ${data.time}
+                        </div>
+                    </div>
+                `;
+                
+                chatBox.appendChild(msgDiv);
+                chatInput.value = ''; // Clear input
+                chatBox.scrollTop = chatBox.scrollHeight; // Scroll to new message
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+        }
+    });
 </script>
 {% endblock %}
