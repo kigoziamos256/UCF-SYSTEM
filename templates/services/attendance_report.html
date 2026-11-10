@@ -146,4 +146,17 @@
         </div>
     </div>
 </div>
+<div>
+    <a href="{% url 'download_attendance_pdf' %}?from={{ from_date }}&to={{ to_date }}&service={{ selected_service }}&session={{ selected_session }}"
+       class="btn text-white" style="background-color: var(--brand-purple);">
+        <i class="bi bi-file-earmark-pdf"></i> Download PDF
+    </a>
+    
+    <a href="{% url 'attendance_export_csv' %}?from={{ from_date }}&to={{ to_date }}&service={{ selected_service }}&session={{ selected_session }}"
+       class="btn btn-success">
+        <i class="bi bi-filetype-csv"></i> Export CSV
+    </a>
+    
+    <!-- Keep the other buttons (Entrance QR, Back) here -->
+</div>
 {% endblock %}
