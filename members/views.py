@@ -14,6 +14,9 @@ from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage
 from .utils import send_ucf_email
 from .models import ChatRoom, Message
+from django.template.loader import render_to_string
+from django.templatetags.static import static
+import weasyprint
 
 import qrcode
 import io
@@ -1320,3 +1323,54 @@ def start_direct_chat(request, user_id):
         room.participants.add(request.user, other_user)
 
     return redirect('chat_room', room_id=room.id)
+
+
+@login_required
+@admin_required
+def download_attendance_pdf(request):
+    """Generate and download today's (or filtered) attendance report as a PDF."""
+    from_date = request.GET.get('from')
+    to_date = request.GET.get('to')
+    service_id = request.GET.get('service')
+    session = request.GET.get('session')
+
+    qs = ServiceAttendance.objects.select_related('member__user', 'service').order_by('member__user__first_name')
+
+    if from_date: qs = qs.filter(service_date__gte=from_date)
+    if to_date: qs = qs.filter(service_date__lte=to_date)
+    if service_id: qs = qs.filter(service_id=service_id)
+    if session: qs = qs.filter(session=session)
+
+    # Calculate summary for the PDF
+    summary = {
+        'total': qs.count(),
+        'unique_members': qs.values('member').distinct().count(),
+        'first': qs.filter(session='first').count(),
+        'second': qs.filter(session='second').count(),
+        'midweek': qs.filter(session='midweek').count(),
+    }
+
+    # Get absolute URLs for the images so WeasyPrint can find them
+    logo_url = request.build_absolute_uri(static('images/ucf-logo.png'))
+
+    context = {
+        'attendances': qs,
+        'summary': summary,
+        'logo_url': logo_url,
+        'generated_on': timezone.now(),
+        'from_date': from_date,
+        'to_date': to_date,
+    }
+
+    # Render HTML
+    html_string = render_to_string('services/attendance_pdf.html', context)
+
+    # Generate PDF
+    pdf_file = weasyprint.HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf()
+
+    # Return as downloadable file
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    filename = f"UCF_Attendance_{timezone.localdate()}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
