@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage
 from .utils import send_ucf_email
+from .models import ChatRoom, Message
 
 import qrcode
 import io
@@ -1230,3 +1231,92 @@ def email_attendance_report(request):
         messages.error(request, "No valid email addresses found for Admins or Usher Leaders.")
 
     return redirect('dashboard')
+
+
+@login_required
+def chat_dashboard(request):
+    """Shows all rooms the user has access to."""
+    user = request.user
+    member = user.member
+
+    # 1. Direct Messages (rooms where user is a participant and type is 'direct')
+    direct_rooms = ChatRoom.objects.filter(room_type='direct', participants=user).order_by('-created_at')
+
+    # 2. Department Room (get or create)
+    dept_room = None
+    if member.department:
+        dept_room, _ = ChatRoom.objects.get_or_create(
+            room_type='department',
+            department=member.department,
+            defaults={'name': f"{member.department.name} Chat"}
+        )
+
+    # 3. Leaders Room (Auto-created)
+    leaders_room = None
+    if member.role in ['admin', 'leader']:
+        leaders_room, _ = ChatRoom.objects.get_or_create(
+            room_type='leaders',
+            defaults={'name': "All Leaders Chat"}
+        )
+
+    # 4. Admins Room
+    admins_room = None
+    if member.role == 'admin':
+        admins_room, _ = ChatRoom.objects.get_or_create(
+            room_type='admins',
+            defaults={'name': "Admins Only Chat"}
+        )
+
+    return render(request, 'chat/dashboard.html', {
+        'direct_rooms': direct_rooms,
+        'dept_room': dept_room,
+        'leaders_room': leaders_room,
+        'admins_room': admins_room,
+    })
+
+@login_required
+def chat_room(request, room_id):
+    """View a specific chat room and post messages."""
+    room = get_object_or_404(ChatRoom, id=room_id)
+    user = request.user
+    member = user.member
+
+    # Security Check: Ensure user belongs in this room
+    if room.room_type == 'direct' and user not in room.participants.all():
+        raise PermissionDenied
+    elif room.room_type == 'department' and member.department != room.department:
+        raise PermissionDenied
+    elif room.room_type == 'leaders' and member.role not in ['admin', 'leader']:
+        raise PermissionDenied
+    elif room.room_type == 'admins' and member.role != 'admin':
+        raise PermissionDenied
+
+    if request.method == 'POST':
+        content = request.POST.get('content', '').strip()
+        if content:
+            Message.objects.create(room=room, sender=user, content=content)
+            return redirect('chat_room', room_id=room.id)
+
+    messages_list = room.messages.all().order_by('timestamp')
+    return render(request, 'chat/room.html', {'room': room, 'messages': messages_list})
+
+@login_required
+def start_direct_chat(request, user_id):
+    """Creates or opens a direct chat between two users."""
+    other_user = get_object_or_404(User, id=user_id)
+    if other_user == request.user:
+        messages.error(request, "You cannot message yourself.")
+        return redirect('member_list')
+
+    # Check if direct room already exists for these 2 users
+    room = ChatRoom.objects.filter(room_type='direct', participants=request.user).filter(participants=other_user).first()
+    
+    if not room:
+        # Create new room
+        room = ChatRoom.objects.create(
+            room_type='direct',
+            name=f"{request.user.username} & {other_user.username}"
+        )
+        room.participants.add(request.user, other_user)
+
+    return redirect('chat_room', room_id=room.id)
