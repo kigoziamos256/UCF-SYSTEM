@@ -104,4 +104,12 @@ urlpatterns = [
     path('chat/<int:room_id>/', views.chat_room, name='chat_room'),
     path('chat/start/<int:user_id>/', views.start_direct_chat, name='start_direct_chat'),
 
+    # Sermons & Gallery
+    path('sermons/', views.sermon_list, name='sermon_list'),
+    path('sermons/<int:sermon_id>/', views.sermon_detail, name='sermon_detail'),
+    path('sermons/add/', views.add_sermon, name='add_sermon'),
+    path('gallery/', views.gallery_list, name='gallery_list'),
+    path('gallery/<int:gallery_id>/', views.gallery_detail, name='gallery_detail'),
+    path('gallery/add/', views.add_gallery, name='add_gallery'),
+
 ]
