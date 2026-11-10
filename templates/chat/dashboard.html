@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Messages{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4" style="color: var(--brand-purple);"><i class="bi bi-chat-dots"></i> Messages</h2>
+    
+    <div class="row">
+        <!-- Group Chats -->
+        <div class="col-md-5 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white"><h5 class="mb-0">Group Chats</h5></div>
+                <div class="list-group list-group-flush">
+                    {% if dept_room %}
+                    <a href="{% url 'chat_room' dept_room.id %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-people-fill text-primary"></i> {{ dept_room.name }}
+                    </a>
+                    {% endif %}
+                    
+                    {% if leaders_room %}
+                    <a href="{% url 'chat_room' leaders_room.id %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-star-fill text-warning"></i> {{ leaders_room.name }}
+                    </a>
+                    {% endif %}
+                    
+                    {% if admins_room %}
+                    <a href="{% url 'chat_room' admins_room.id %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-shield-lock-fill text-danger"></i> {{ admins_room.name }}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Direct Messages -->
+        <div class="col-md-7 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Direct Messages</h5>
+                    <a href="{% url 'member_list' %}" class="btn btn-sm text-white" style="background-color: var(--brand-purple);">
+                        <i class="bi bi-person-plus"></i> New Message
+                    </a>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for room in direct_rooms %}
+                        <a href="{% url 'chat_room' room.id %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-person-circle"></i> {{ room.name }}
+                        </a>
+                    {% empty %}
+                        <div class="p-3 text-muted text-center">No direct messages yet. Click "New Message" to start.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
