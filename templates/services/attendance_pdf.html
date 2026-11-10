@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        /* Define Brand Colors */
+        :root {
+            --brand-purple: #6B1F2E;
+            --brand-gold: #C9A227;
+        }
+
+        @page {
+            size: A4;
+            margin: 2cm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: Arial, sans-serif;
+                font-size: 10px;
+                color: #888;
+            }
+            @bottom-left {
+                content: "University Community Fellowship";
+                font-family: Arial, sans-serif;
+                font-size: 10px;
+                color: #888;
+            }
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            position: relative;
+        }
+
+        /* Watermark */
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.05;
+            width: 500px;
+            z-index: -1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #6B1F2E;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+        }
+        .header h1 {
+            color: #6B1F2E;
+            margin: 10px 0 5px 0;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+        .header h2 {
+            color: #C9A227;
+            margin: 0;
+            font-size: 16px;
+            font-weight: normal;
+            letter-spacing: 2px;
+        }
+
+        /* Summary Boxes */
+        .summary-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .summary-box {
+            background-color: #f8f9fa;
+            border-top: 3px solid #6B1F2E;
+            padding: 15px;
+            text-align: center;
+            width: 23%;
+            border-radius: 4px;
+        }
+        .summary-box h3 {
+            margin: 0;
+            color: #6B1F2E;
+            font-size: 20px;
+        }
+        .summary-box p {
+            margin: 5px 0 0 0;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            font-size: 12px;
+        }
+        th {
+            background-color: #6B1F2E;
+            color: white;
+            text-align: left;
+            padding: 10px;
+        }
+        td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        tr:nth-child(even) {
+            background-color: #fcfcfc;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 11px;
+            color: #888;
+            margin-top: 40px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Watermark Logo -->
+    <img src="{{ logo_url }}" class="watermark" alt="Watermark">
+
+    <!-- Header -->
+    <div class="header">
+        <img src="{{ logo_url }}" alt="UCF Logo">
+        <h1>UNIVERSITY COMMUNITY FELLOWSHIP</h1>
+        <h2>Friends for Life · Fellowship · Service · Stewardship</h2>
+        <p style="margin-top: 10px; font-size: 14px; color: #555;">
+            <strong>Attendance Report</strong> 
+            {% if from_date or to_date %}
+                ({{ from_date|default:"All" }} to {{ to_date|default:"Present" }})
+            {% else %}
+                (All Time)
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-container">
+        <div class="summary-box">
+            <h3>{{ summary.total }}</h3>
+            <p>Total Check-ins</p>
+        </div>
+        <div class="summary-box">
+            <h3>{{ summary.unique_members }}</h3>
+            <p>Unique Members</p>
+        </div>
+        <div class="summary-box">
+            <h3>{{ summary.first|add:summary.second }}</h3>
+            <p>Sunday Attendees</p>
+        </div>
+        <div class="summary-box">
+            <h3>{{ summary.midweek }}</h3>
+            <p>Mid-Week Attendees</p>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Member Name</th>
+                <th>Service Date</th>
+                <th>Service</th>
+                <th>Session</th>
+                <th>Check-in Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in attendances %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td><strong>{{ a.member.user.get_full_name|default:a.member.user.username }}</strong></td>
+                <td>{{ a.service_date|date:"M d, Y" }}</td>
+                <td>{{ a.service.label }}</td>
+                <td>
+                    {% if a.session == 'first' %}First Service
+                    {% elif a.session == 'second' %}Second Service
+                    {% elif a.session == 'midweek' %}Mid-Week
+                    {% else %}—{% endif %}
+                </td>
+                <td>{{ a.check_in_time|date:"H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 20px;">No attendance records found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer-note">
+        Report generated on {{ generated_on|date:"F d, Y \a\t H:i" }} by {{ request.user.get_full_name|default:request.user.username }}.
+    </div>
+
+</body>
+</html>
