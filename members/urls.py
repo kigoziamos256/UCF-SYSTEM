@@ -99,4 +99,9 @@ urlpatterns = [
     path('media/external-events/add/', views.add_external_event, name='add_external_event'),
     path('attendance/email-report/', views.email_attendance_report, name='email_attendance_report'),
 
+    # ==================== CHAT SYSTEM ====================
+    path('chat/', views.chat_dashboard, name='chat_dashboard'),
+    path('chat/<int:room_id>/', views.chat_room, name='chat_room'),
+    path('chat/start/<int:user_id>/', views.start_direct_chat, name='start_direct_chat'),
+
 ]
