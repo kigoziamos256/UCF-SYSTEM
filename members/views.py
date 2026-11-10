@@ -17,6 +17,8 @@ from .models import ChatRoom, Message
 from django.template.loader import render_to_string
 from django.templatetags.static import static
 from xhtml2pdf import pisa
+from .models import Sermon, ServiceGallery
+from .forms import SermonForm, ServiceGalleryForm, GalleryPhotoFormSet
 
 import qrcode
 import io
@@ -1384,3 +1386,50 @@ def download_attendance_pdf(request):
 
     return response
 
+# --- Sermons ---
+def sermon_list(request):
+    sermons = Sermon.objects.all()
+    return render(request, 'media/sermon_list.html', {'sermons': sermons})
+
+def sermon_detail(request, sermon_id):
+    sermon = get_object_or_404(Sermon, id=sermon_id)
+    return render(request, 'media/sermon_detail.html', {'sermon': sermon})
+
+@login_required
+@admin_required
+def add_sermon(request):
+    if request.method == 'POST':
+        form = SermonForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Sermon uploaded!")
+            return redirect('sermon_list')
+    else:
+        form = SermonForm()
+    return render(request, 'media/add_sermon.html', {'form': form})
+
+# --- Gallery ---
+def gallery_list(request):
+    galleries = ServiceGallery.objects.prefetch_related('photos').all()
+    return render(request, 'media/gallery_list.html', {'galleries': galleries})
+
+def gallery_detail(request, gallery_id):
+    gallery = get_object_or_404(ServiceGallery, id=gallery_id)
+    return render(request, 'media/gallery_detail.html', {'gallery': gallery})
+
+@login_required
+@admin_required
+def add_gallery(request):
+    if request.method == 'POST':
+        form = ServiceGalleryForm(request.POST)
+        formset = GalleryPhotoFormSet(request.POST, request.FILES)
+        if form.is_valid() and formset.is_valid():
+            gallery = form.save()
+            formset.instance = gallery
+            formset.save()
+            messages.success(request, "Gallery created!")
+            return redirect('gallery_list')
+    else:
+        form = ServiceGalleryForm()
+        formset = GalleryPhotoFormSet()
+    return render(request, 'media/add_gallery.html', {'form': form, 'formset': formset})
