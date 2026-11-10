@@ -2,7 +2,7 @@
 {% load static %}
 {% load profile_tags %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,21 +40,21 @@
         }
         .notification-item {
             padding: 12px 15px;
-            border-bottom: 1px solid #dee2e6;
+            border-bottom: 1px solid var(--bs-border-color);
             transition: background-color 0.2s;
         }
         .notification-item:last-child {
             border-bottom: none;
         }
         .notification-item:hover {
-            background-color: #f8f9fa;
+            background-color: var(--bs-tertiary-bg);
         }
         .notification-item.unread {
-            background-color: #e7f1ff;
+            background-color: rgba(13,110,253,0.1);
         }
         .notification-time {
             font-size: 0.75rem;
-            color: #6c757d;
+            color: var(--bs-secondary-color);
         }
         .profile-name {
             max-width: 150px;
@@ -68,47 +68,12 @@
             border-radius: 12px;
             font-weight: 500;
         }
-        .role-badge.admin {
-            background-color: #dc3545;
-            color: white;
-        }
-        .role-badge.leader {
-            background-color: #ffc107;
-            color: #000;
-        }
-        .role-badge.finance {
-            background-color: #6B1F2E;
-            color: white;
-        }
-        .role-badge.member {
-            background-color: #6c757d;
-            color: white;
-        }
-        .profile-picture-upload {
-            position: relative;
-            display: inline-block;
-        }
-        .profile-picture-upload:hover .upload-overlay {
-            opacity: 1;
-        }
-        .upload-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.5);
-            color: white;
-            text-align: center;
-            padding: 5px;
-            border-radius: 0 0 50% 50%;
-            cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 0.8rem;
-        }
-        .logout-form {
-            display: inline;
-        }
+        .role-badge.admin { background-color: #dc3545; color: white; }
+        .role-badge.leader { background-color: #ffc107; color: #000; }
+        .role-badge.finance { background-color: #6B1F2E; color: white; }
+        .role-badge.member { background-color: #6c757d; color: white; }
+
+        .logout-form { display: inline; }
         .logout-btn {
             background: none;
             border: none;
@@ -119,9 +84,7 @@
             font-size: 1rem;
             cursor: pointer;
         }
-        .logout-btn:hover {
-            background-color: #f8f9fa;
-        }
+        .logout-btn:hover { background-color: var(--bs-tertiary-bg); }
     </style>
     <link rel="stylesheet" href="{% static 'css/brand.css' %}">
     {% block extra_css %}{% endblock %}
@@ -147,39 +110,27 @@
             {% if user.is_authenticated %}
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
-                       href="{% url 'dashboard' %}">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
                         <i class="bi bi-speedometer2"></i> Dashboard
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'member_list' %}active{% endif %}" 
-                       href="{% url 'member_list' %}">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'member_list' %}active{% endif %}" href="{% url 'member_list' %}">
                         <i class="bi bi-people"></i> Members
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'calendar' %}active{% endif %}" 
-                       href="{% url 'calendar' %}">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'calendar' %}active{% endif %}" href="{% url 'calendar' %}">
                         <i class="bi bi-calendar-event"></i> Calendar
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'announcements' %}active{% endif %}" 
-                       href="{% url 'announcements' %}">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'announcements' %}active{% endif %}" href="{% url 'announcements' %}">
                         <i class="bi bi-megaphone"></i> Announcements
                     </a>
                 </li>
 
-                <!-- ========== HELP LINK ========== -->
-                <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'help' %}active{% endif %}"
-                       href="{% url 'help' %}">
-                        <i class="bi bi-question-circle"></i> Help
-                    </a>
-                </li>
-
-                <!-- ========== SERVICES DROPDOWN ========== -->
+                <!-- SERVICES DROPDOWN -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="servicesDropdown" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-house-heart"></i> Services
@@ -192,6 +143,13 @@
                             <i class="bi bi-moon-stars"></i> Mid-Week Service
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'sermon_list' %}">
+                            <i class="bi bi-play-circle"></i> Sermon Archive
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'gallery_list' %}">
+                            <i class="bi bi-images"></i> Service Gallery
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'my_qr' %}">
                             <i class="bi bi-qr-code"></i> My Attendance QR
                         </a></li>
@@ -201,7 +159,6 @@
                         </a></li>
                         {% endif %}
                         
-                        <!-- ========== MEDIA HUB LINK ========== -->
                         {% if user.member.role == 'admin' or user.member.department and 'media' in user.member.department.name|lower %}
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'media_dashboard' %}">
@@ -228,8 +185,6 @@
                             <i class="bi bi-building"></i> View Departments
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
-
-                        <!-- Services admin section -->
                         <li><a class="dropdown-item" href="{% url 'upload_flyer' %}">
                             <i class="bi bi-image"></i> Upload Service Flyer
                         </a></li>
@@ -240,14 +195,11 @@
                             <i class="bi bi-clipboard-data"></i> Attendance Report
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
-
-                        <!-- Finance -->
                         <li><a class="dropdown-item" href="{% url 'finance_dashboard' %}">
                             <i class="bi bi-wallet2"></i> Finance Department
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
                         {% endif %}
-
                         <li><a class="dropdown-item" href="{% url 'assign_duty' %}">
                             <i class="bi bi-check2-circle"></i> Assign Duty
                         </a></li>
@@ -259,8 +211,23 @@
                 {% endif %}
             </ul>
 
-            <ul class="navbar-nav ms-auto">
-                <!-- Notifications Dropdown -->
+            <ul class="navbar-nav ms-auto align-items-center">
+                
+                <!-- DARK MODE TOGGLE -->
+                <li class="nav-item me-2">
+                    <a class="nav-link" href="#" id="themeToggle" title="Toggle Dark Mode">
+                        <i class="bi bi-moon-stars fs-5" id="themeIcon"></i>
+                    </a>
+                </li>
+
+                <!-- MESSAGES -->
+                <li class="nav-item me-2">
+                   <a class="nav-link {% if 'chat' in request.path %}active{% endif %}" href="{% url 'chat_dashboard' %}" title="Messages">
+                       <i class="bi bi-chat-dots fs-5"></i>
+                   </a>
+                </li>
+
+                <!-- NOTIFICATIONS DROPDOWN -->
                 <li class="nav-item dropdown mx-2">
                     <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-bell fs-5"></i>
@@ -269,7 +236,7 @@
                         {% endif %}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
-                        <li><h6 class="dropdown-header bg-light py-2">Notifications</h6></li>
+                        <li><h6 class="dropdown-header bg-body-tertiary py-2">Notifications</h6></li>
                         {% if notifications %}
                             {% for notification in notifications|slice:":5" %}
                             <li>
@@ -303,14 +270,8 @@
                         {% endif %}
                     </ul>
                 </li>
-                    <li class="nav-item">
-                   <a class="nav-link {% if 'chat' in request.path %}active{% endif %}" href="{% url 'chat_dashboard' %}">
-                   <i class="bi bi-chat-dots"></i> Messages
-                   </a>
-              </li>
-                
 
-                <!-- Profile Dropdown -->
+                <!-- PROFILE DROPDOWN -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
                         {% profile_picture user 32 'me-2' %}
@@ -346,7 +307,12 @@
                 </li>
             </ul>
             {% else %}
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item me-2">
+                    <a class="nav-link" href="#" id="themeToggle" title="Toggle Dark Mode">
+                        <i class="bi bi-moon-stars fs-5" id="themeIcon"></i>
+                    </a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'login' %}">Login</a>
                 </li>
@@ -382,7 +348,7 @@
 </main>
 
 <!-- Footer -->
-<footer class="bg-light text-center text-muted py-3 mt-5">
+<footer class="bg-body-tertiary text-center text-muted py-3 mt-5 border-top">
     <div class="container">
         <small>&copy; {% now "Y" %} University Community Fellowship. All rights reserved.</small>
     </div>
@@ -433,6 +399,31 @@
     })();
 </script>
 
+<!-- Dark Mode Logic -->
+<script>
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const htmlElement = document.documentElement;
+
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    htmlElement.setAttribute('data-bs-theme', savedTheme);
+    if (themeIcon) {
+        themeIcon.className = savedTheme === 'dark' ? 'bi bi-sun fs-5' : 'bi bi-moon-stars fs-5';
+    }
+
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const currentTheme = htmlElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            htmlElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            themeIcon.className = newTheme === 'dark' ? 'bi bi-sun fs-5' : 'bi bi-moon-stars fs-5';
+        });
+    }
+</script>
+
 {% if user.is_authenticated %}
 <!-- WhatsApp-style toast container -->
 <div id="toast-container"></div>
@@ -448,7 +439,8 @@
     }
     .ucf-toast {
         pointer-events: auto;
-        background: #fff;
+        background: var(--bs-body-bg);
+        color: var(--bs-body-color);
         border-radius: 12px;
         box-shadow: 0 8px 24px rgba(107,31,46,0.22);
         padding: 12px 16px;
@@ -468,6 +460,7 @@
     .ucf-toast.event { border-left-color: #0d6efd; }
     .ucf-toast.duty { border-left-color: #ffc107; }
     .ucf-toast.announcement { border-left-color: #6B1F2E; }
+    
     .ucf-toast-icon {
         flex-shrink: 0;
         width: 40px;
@@ -483,33 +476,34 @@
     .ucf-toast.event .ucf-toast-icon { background: rgba(13,110,253,0.1); color: #0d6efd; }
     .ucf-toast.duty .ucf-toast-icon { background: rgba(255,193,7,0.18); color: #b8860b; }
     .ucf-toast-body { flex-grow: 1; overflow: hidden; }
+    
     .ucf-toast-title {
         font-weight: 600;
         font-size: 0.9rem;
         margin-bottom: 2px;
-        color: #333;
     }
     .ucf-toast-msg {
         font-size: 0.82rem;
-        color: #6c757d;
+        color: var(--bs-secondary-color);
         margin: 0;
         line-height: 1.35;
     }
     .ucf-toast-time {
         font-size: 0.7rem;
-        color: #999;
+        color: var(--bs-tertiary-color);
         margin-top: 4px;
     }
     .ucf-toast-close {
         background: none;
         border: none;
-        color: #bbb;
+        color: var(--bs-secondary-color);
         font-size: 1.1rem;
         padding: 0;
         line-height: 1;
         cursor: pointer;
     }
-    .ucf-toast-close:hover { color: #666; }
+    .ucf-toast-close:hover { color: var(--bs-body-color); }
+    
     @keyframes slideInRight {
         from { transform: translateX(420px); opacity: 0; }
         to   { transform: translateX(0);     opacity: 1; }
@@ -539,7 +533,6 @@
     let audioCtx = null;
     let soundEnabled = true;
 
-    // Subtle "ping" sound (WhatsApp-like, no external file needed)
     function playPing() {
         if (!soundEnabled) return;
         try {
@@ -559,7 +552,7 @@
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
             osc.start(now);
             osc.stop(now + 0.35);
-        } catch (e) { /* silent */ }
+        } catch (e) { }
     }
 
     function iconFor(type) {
@@ -638,7 +631,6 @@
             const newOnes = data.notifications.filter(n => !seenIds.has(n.id));
 
             if (firstLoad) {
-                // First poll: just remember what's already there, don't toast
                 data.notifications.forEach(n => seenIds.add(n.id));
                 firstLoad = false;
                 return;
@@ -651,15 +643,13 @@
                     seenIds.add(n.id);
                 });
             }
-        } catch (e) { /* silent */ }
+        } catch (e) { }
     }
 
-    // Enable sound only after first user interaction (browser autoplay policy)
     document.addEventListener('click', function enableAudio() {
         if (audioCtx) audioCtx.resume();
     }, { once: false });
 
-    // First poll after 3 seconds, then every 15 seconds
     setTimeout(function() {
         poll();
         setInterval(poll, 15000);
