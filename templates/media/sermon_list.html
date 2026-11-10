@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Sermons{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 style="color: var(--brand-purple);"><i class="bi bi-play-circle"></i> Sermon Archive</h2>
+        {% if user.member.role == 'admin' %}
+        <a href="{% url 'add_sermon' %}" class="btn text-white" style="background-color: var(--brand-purple);">Upload Sermon</a>
+        {% endif %}
+    </div>
+    <div class="row">
+        {% for sermon in sermons %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title" style="color: var(--brand-purple);">{{ sermon.title }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">{{ sermon.preacher }}</h6>
+                    <p class="card-text small mb-3"><i class="bi bi-calendar"></i> {{ sermon.date_preached|date:"M d, Y" }}</p>
+                    <a href="{% url 'sermon_detail' sermon.id %}" class="btn btn-sm btn-outline-primary w-100">Watch & Read Notes</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-muted">No sermons uploaded yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
