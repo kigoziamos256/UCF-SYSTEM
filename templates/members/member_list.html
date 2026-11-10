@@ -105,6 +105,11 @@
     </div>
 </div>
 
+<!-- Inside the member loop -->
+<a href="{% url 'start_direct_chat' member.user.id %}" class="btn btn-sm btn-outline-primary" title="Send Message">
+    <i class="bi bi-chat-dots"></i>
+</a>
+
 <style>
     .hover-card {
         transition: transform 0.2s, box-shadow 0.2s;
