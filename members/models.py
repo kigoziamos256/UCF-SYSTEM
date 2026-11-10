@@ -893,3 +893,34 @@ class ExternalEvent(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.event_date}"
+
+
+# ==================== CHAT SYSTEM ====================
+
+class ChatRoom(models.Model):
+    ROOM_TYPES = (
+        ('direct', 'Direct Message'),
+        ('department', 'Department Group'),
+        ('leaders', 'All Leaders'),
+        ('admins', 'All Admins'),
+    )
+    name = models.CharField(max_length=100)
+    room_type = models.CharField(max_length=20, choices=ROOM_TYPES)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True)
+    participants = models.ManyToManyField(User, related_name='chat_rooms', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+class Message(models.Model):
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['timestamp']
+
+    def __str__(self):
+        return f"{self.sender.username}: {self.content[:30]}"
