@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Service Gallery{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 style="color: var(--brand-purple);"><i class="bi bi-images"></i> Main Service Gallery</h2>
+        {% if user.member.role == 'admin' %}
+        <a href="{% url 'add_gallery' %}" class="btn text-white" style="background-color: var(--brand-purple);">Create Gallery</a>
+        {% endif %}
+    </div>
+    <div class="row">
+        {% for gallery in galleries %}
+        <div class="col-md-6 mb-4">
+            <a href="{% url 'gallery_detail' gallery.id %}" class="text-decoration-none">
+                <div class="card shadow-sm border-0 hover-card">
+                    {% if gallery.photos.first %}
+                    <img src="{{ gallery.photos.first.image.url }}" class="card-img-top" style="height: 250px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body bg-dark text-white text-center rounded-bottom">
+                        <h5 class="mb-1">{{ gallery.title }}</h5>
+                        <small>{{ gallery.service_date|date:"F d, Y" }} • {{ gallery.photos.count }} Photos</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <p class="text-center text-muted">No galleries created yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
