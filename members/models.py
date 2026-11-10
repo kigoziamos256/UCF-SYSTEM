@@ -924,3 +924,56 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.sender.username}: {self.content[:30]}"
+
+
+# ==================== SERMONS & GALLERY ====================
+
+class Sermon(models.Model):
+    title = models.CharField(max_length=200)
+    preacher = models.CharField(max_length=100)
+    date_preached = models.DateField()
+    youtube_url = models.URLField(help_text="Paste the full YouTube video link")
+    notes = models.TextField(blank=True, help_text="Sermon outline or main points")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date_preached']
+
+    def __str__(self):
+        return f"{self.title} - {self.preacher}"
+        
+    def get_embed_url(self):
+        """Extracts the video ID from a YouTube URL to make it embeddable."""
+        import re
+        # Handles youtube.com/watch?v=ID and youtu.be/ID
+        regex = r"(?:v=|\/)([0-9A-Za-z_-]{11}).*"
+        match = re.search(regex, self.youtube_url)
+        if match:
+            return f"https://www.youtube.com/embed/{match.group(1)}"
+        return self.youtube_url
+
+class ServiceGallery(models.Model):
+    title = models.CharField(max_length=200)
+    service_date = models.DateField()
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-service_date']
+        verbose_name_plural = "Service Galleries"
+
+    def __str__(self):
+        return f"{self.title} ({self.service_date})"
+
+class GalleryPhoto(models.Model):
+    gallery = models.ForeignKey(ServiceGallery, on_delete=models.CASCADE, related_name='photos')
+    image = ProcessedImageField(
+        upload_to='service_gallery/',
+        processors=[ResizeToFill(1000, 1000)], # Crops to square for uniform grid
+        format='JPEG',
+        options={'quality': 85}
+    )
+    caption = models.CharField(max_length=200, blank=True)
+
+    def __str__(self):
+        return f"Photo for {self.gallery.title}"
