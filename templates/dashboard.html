@@ -440,4 +440,7 @@
         }
     }
 </style>
+<a href="{% url 'email_attendance_report' %}" class="btn btn-danger" onclick="return confirm('Send today\'s attendance report to Admins and Usher Leaders?');">
+    <i class="bi bi-envelope-paper"></i> Email Attendance Report
+</a>
 {% endblock %}
