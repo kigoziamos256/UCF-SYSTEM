@@ -12,13 +12,9 @@ from django.core.paginator import Paginator
 from django.urls import reverse
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage
-from .utils import send_ucf_email
-from .models import ChatRoom, Message
 from django.template.loader import render_to_string
 from django.templatetags.static import static
 from xhtml2pdf import pisa
-from .models import Sermon, ServiceGallery
-from .forms import SermonForm, ServiceGalleryForm, GalleryPhotoFormSet
 
 import qrcode
 import io
@@ -26,12 +22,15 @@ import secrets
 import requests
 from datetime import time
 
+from .utils import send_ucf_email
 from .models import (
     Event, Member, Duty, Announcement, Notification, Attendance, Department,
     FinancialTransaction, Budget, ExpenseRequisition, BankReconciliation,
     Vendor, IncomeCategory, ExpenseCategory, Currency, ServiceSchedule, 
     ServiceFlyer, ServiceAttendance, GuestAttendance, DepartmentPhoto,
-    build_member_qr_payload, parse_member_qr_payload
+    build_member_qr_payload, parse_member_qr_payload,
+    ChatRoom, Message, Sermon, ServiceGallery,
+    EquipmentCategory, Equipment, EquipmentLoan, ExternalEvent
 )
 
 from .forms import (
@@ -39,7 +38,9 @@ from .forms import (
     DepartmentForm, ProfilePictureForm, UserRegisterForm, AttendanceForm,
     FinancialTransactionForm, BudgetForm, ExpenseRequisitionForm,
     BankReconciliationForm, FinanceFilterForm, ServiceFlyerForm,
-    CompleteProfileForm, DepartmentProfileForm, DepartmentPhotoFormSet
+    CompleteProfileForm, DepartmentProfileForm, DepartmentPhotoFormSet,
+    SermonForm, ServiceGalleryForm, GalleryPhotoFormSet,
+    EquipmentForm, EquipmentLoanForm, ExternalEventForm
 )
 
 
@@ -61,6 +62,17 @@ def leader_required(view_func):
         raise PermissionDenied
     return wrapper
 
+def media_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if request.user.is_authenticated and hasattr(request.user, 'member'):
+            member = request.user.member
+            if member.role == 'admin':
+                return view_func(request, *args, **kwargs)
+            if member.role == 'leader' and member.department and 'media' in member.department.name.lower():
+                return view_func(request, *args, **kwargs)
+        raise PermissionDenied("You do not have access to the Media Hub.")
+    return wrapper
+
 
 # ============================================================
 # HOME & AUTH
@@ -75,7 +87,6 @@ def custom_logout(request):
     return redirect('login')
 
 def make_admin(request):
-    """Temporary view – visit /members/make-admin/ to create a superuser."""
     if User.objects.filter(is_superuser=True).exists():
         messages.info(request, "Superuser already exists.")
     else:
@@ -84,7 +95,6 @@ def make_admin(request):
     return redirect('/admin/')
 
 def create_superuser_temp(request):
-    """Alternative temporary view – visit /members/create-superuser/."""
     if User.objects.filter(is_superuser=True).exists():
         messages.info(request, "Superuser already exists.")
     else:
@@ -115,12 +125,10 @@ def custom_csrf_failure(request, reason=""):
     return render(request, 'csrf_failure.html', {'reason': reason}, status=403)
 
 def help_view(request):
-    """Public help page explaining how to use the system."""
     return render(request, 'help.html')
 
 @login_required
 def complete_profile_view(request):
-    """After social signup, ask the user to pick a department and photo."""
     member = request.user.member
 
     if member.department and request.method == 'GET':
@@ -530,12 +538,10 @@ def announcement_detail_view(request, announcement_id):
 # ============================================================
 
 def department_list_view(request):
-    """Public view: List all departments"""
     departments = Department.objects.all()
     return render(request, 'departments/list.html', {'departments': departments})
 
 def department_detail_view(request, dept_id):
-    """Public view: See a department's profile"""
     department = get_object_or_404(Department, id=dept_id)
     photos = department.photos.all()
     
@@ -555,7 +561,6 @@ def department_detail_view(request, dept_id):
 
 @login_required
 def department_edit_view(request, dept_id):
-    """Admin or Leader edits their specific department"""
     department = get_object_or_404(Department, id=dept_id)
     member = request.user.member
 
@@ -602,7 +607,6 @@ def create_department(request):
 @login_required
 @admin_required
 def department_list(request):
-    """Admin only view for managing departments"""
     departments = Department.objects.all()
     return render(request, 'members/department_list.html', {'departments': departments})
 
@@ -1067,277 +1071,9 @@ def attendance_export_csv(request):
         ])
     return response
 
-
 # ============================================================
-# MEDIA DEPARTMENT MANAGEMENT
+# PDF GENERATION
 # ============================================================
-
-from .models import EquipmentCategory, Equipment, EquipmentLoan, ExternalEvent
-from .forms import EquipmentForm, EquipmentLoanForm, ExternalEventForm
-
-def media_required(view_func):
-    """Allows access only to Admins and Leaders in the Media Department."""
-    def wrapper(request, *args, **kwargs):
-        if request.user.is_authenticated and hasattr(request.user, 'member'):
-            member = request.user.member
-            if member.role == 'admin':
-                return view_func(request, *args, **kwargs)
-            if member.role == 'leader' and member.department and 'media' in member.department.name.lower():
-                return view_func(request, *args, **kwargs)
-        raise PermissionDenied("You do not have access to the Media Hub.")
-    return wrapper
-
-@login_required
-@media_required
-def media_dashboard(request):
-    """Main dashboard for the Media Team."""
-    categories = EquipmentCategory.objects.all()
-    total_equipment = Equipment.objects.count()
-    lent_equipment = Equipment.objects.filter(status='lent').count()
-    
-    # Active loans (not returned yet)
-    active_loans = EquipmentLoan.objects.filter(actual_return__isnull=True).order_by('expected_return')
-    
-    # Upcoming external events
-    today = timezone.now().date()
-    upcoming_events = ExternalEvent.objects.filter(event_date__gte=today, is_completed=False).order_by('event_date')
-
-    return render(request, 'media/dashboard.html', {
-        'categories': categories,
-        'total_equipment': total_equipment,
-        'lent_equipment': lent_equipment,
-        'active_loans': active_loans,
-        'upcoming_events': upcoming_events,
-    })
-
-@login_required
-@media_required
-def equipment_list(request):
-    """List all equipment grouped by category."""
-    categories = EquipmentCategory.objects.prefetch_related('equipment').all()
-    return render(request, 'media/equipment_list.html', {'categories': categories})
-
-@login_required
-@media_required
-def equipment_add(request):
-    if request.method == 'POST':
-        form = EquipmentForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Equipment added successfully.")
-            return redirect('equipment_list')
-    else:
-        form = EquipmentForm()
-    return render(request, 'media/equipment_form.html', {'form': form, 'title': 'Add New Equipment'})
-
-@login_required
-@media_required
-def lend_equipment(request):
-    if request.method == 'POST':
-        form = EquipmentLoanForm(request.POST)
-        if form.is_valid():
-            loan = form.save(commit=False)
-            loan.authorized_by = request.user
-            loan.save()
-            
-            # Update equipment status
-            loan.equipment.status = 'lent'
-            loan.equipment.save()
-            
-            messages.success(request, f"{loan.equipment.name} lent to {loan.borrower_name}.")
-            return redirect('media_dashboard')
-    else:
-        form = EquipmentLoanForm()
-    return render(request, 'media/equipment_form.html', {'form': form, 'title': 'Lend Equipment'})
-
-@login_required
-@media_required
-@require_POST
-def return_equipment(request, loan_id):
-    loan = get_object_or_404(EquipmentLoan, id=loan_id)
-    if not loan.actual_return:
-        loan.actual_return = timezone.now()
-        loan.save()
-        
-        # Update equipment status back to available
-        loan.equipment.status = 'available'
-        loan.equipment.save()
-        messages.success(request, f"{loan.equipment.name} returned successfully.")
-    return redirect('media_dashboard')
-
-@login_required
-@media_required
-def external_events_list(request):
-    events = ExternalEvent.objects.all().order_by('-event_date')
-    return render(request, 'media/external_events.html', {'events': events})
-
-@login_required
-@media_required
-def add_external_event(request):
-    if request.method == 'POST':
-        form = ExternalEventForm(request.POST)
-        if form.is_valid():
-            event = form.save(commit=False)
-            event.created_by = request.user
-            event.save()
-            messages.success(request, "External event registered.")
-            return redirect('external_events_list')
-    else:
-        form = ExternalEventForm()
-    return render(request, 'media/equipment_form.html', {'form': form, 'title': 'Register External Event'})
-
-
-@login_required
-def email_attendance_report(request):
-    """Generates today's attendance summary and emails it to Admins and Usher Leaders."""
-    if not (request.user.member.role in ['admin', 'leader']):
-        raise PermissionDenied
-        
-    today = timezone.localdate()
-    attendance = ServiceAttendance.objects.filter(service_date=today)
-    
-    if not attendance.exists():
-        messages.warning(request, "No attendance recorded today yet.")
-        return redirect('dashboard')
-
-    # Get summary data
-    total = attendance.count()
-    unique = attendance.values('member').distinct().count()
-    first = attendance.filter(session='first').count()
-    second = attendance.filter(session='second').count()
-    midweek = attendance.filter(session='midweek').count()
-
-    # Build the email body
-    report_text = (
-        f"UCF Attendance Report for {today.strftime('%B %d, %Y')}\n\n"
-        f"Total Check-ins: {total}\n"
-        f"Unique Members: {unique}\n\n"
-        f"First Service: {first}\n"
-        f"Second Service: {second}\n"
-        f"Mid-Week: {midweek}\n\n"
-        f"Please log in to the app for the full detailed list."
-    )
-
-    # Find recipients (Admins + Usher Leaders)
-    recipients = list(Member.objects.filter(role='admin').values_list('user__email', flat=True))
-    
-    # Try to find the Usher Department and its leader
-    usher_dept = Department.objects.filter(name__icontains='usher').first()
-    if usher_dept:
-        usher_leaders = usher_dept.members.filter(role__in=['leader', 'admin']).values_list('user__email', flat=True)
-        recipients.extend(usher_leaders)
-
-    # Clean list and send
-    recipients = [email for email in set(recipients) if email]
-    if recipients:
-        send_ucf_email(f"Attendance Report - {today}", report_text, recipients)
-        messages.success(request, f"Attendance report emailed to {len(recipients)} recipients.")
-    else:
-        messages.error(request, "No valid email addresses found for Admins or Usher Leaders.")
-
-    return redirect('dashboard')
-
-
-@login_required
-def chat_dashboard(request):
-    """Shows all rooms the user has access to."""
-    user = request.user
-    member = user.member
-
-    # 1. Direct Messages (rooms where user is a participant and type is 'direct')
-    direct_rooms = ChatRoom.objects.filter(room_type='direct', participants=user).order_by('-created_at')
-
-    # 2. Department Room (get or create)
-    dept_room = None
-    if member.department:
-        dept_room, _ = ChatRoom.objects.get_or_create(
-            room_type='department',
-            department=member.department,
-            defaults={'name': f"{member.department.name} Chat"}
-        )
-
-    # 3. Leaders Room (Auto-created)
-    leaders_room = None
-    if member.role in ['admin', 'leader']:
-        leaders_room, _ = ChatRoom.objects.get_or_create(
-            room_type='leaders',
-            defaults={'name': "All Leaders Chat"}
-        )
-
-    # 4. Admins Room
-    admins_room = None
-    if member.role == 'admin':
-        admins_room, _ = ChatRoom.objects.get_or_create(
-            room_type='admins',
-            defaults={'name': "Admins Only Chat"}
-        )
-
-    return render(request, 'chat/dashboard.html', {
-        'direct_rooms': direct_rooms,
-        'dept_room': dept_room,
-        'leaders_room': leaders_room,
-        'admins_room': admins_room,
-    })
-
-@login_required
-def chat_room(request, room_id):
-    """View a specific chat room and post messages."""
-    room = get_object_or_404(ChatRoom, id=room_id)
-    user = request.user
-    member = user.member
-
-    # Security Check
-    if room.room_type == 'direct' and user not in room.participants.all():
-        raise PermissionDenied
-    elif room.room_type == 'department' and member.department != room.department:
-        raise PermissionDenied
-    elif room.room_type == 'leaders' and member.role not in ['admin', 'leader']:
-        raise PermissionDenied
-    elif room.room_type == 'admins' and member.role != 'admin':
-        raise PermissionDenied
-
-    if request.method == 'POST':
-        content = request.POST.get('content', '').strip()
-        if content:
-            msg = Message.objects.create(room=room, sender=user, content=content)
-            
-            # If the request is AJAX (from JavaScript), return JSON
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'status': 'success',
-                    'message': msg.content,
-                    'sender_id': user.id,
-                    'sender_name': user.get_full_name() or user.username,
-                    'time': msg.timestamp.strftime('%H:%M')
-                })
-            
-            # Fallback for normal form submission
-            return redirect('chat_room', room_id=room.id)
-
-    messages_list = room.messages.all().order_by('timestamp')
-    return render(request, 'chat/room.html', {'room': room, 'messages': messages_list})
-
-@login_required
-def start_direct_chat(request, user_id):
-    """Creates or opens a direct chat between two users."""
-    other_user = get_object_or_404(User, id=user_id)
-    if other_user == request.user:
-        messages.error(request, "You cannot message yourself.")
-        return redirect('member_list')
-
-    # Check if direct room already exists for these 2 users
-    room = ChatRoom.objects.filter(room_type='direct', participants=request.user).filter(participants=other_user).first()
-    
-    if not room:
-        # Create new room
-        room = ChatRoom.objects.create(
-            room_type='direct',
-            name=f"{request.user.username} & {other_user.username}"
-        )
-        room.participants.add(request.user, other_user)
-
-    return redirect('chat_room', room_id=room.id)
-
 
 @login_required
 @admin_required
@@ -1371,9 +1107,11 @@ def download_attendance_pdf(request):
         'generated_on': timezone.now(),
         'from_date': from_date,
         'to_date': to_date,
+        'generated_by': request.user.get_full_name() or request.user.username, # 👈 ADDED FALLBACK
     }
 
-    html_string = render_to_string('services/attendance_pdf.html', context)
+    # 👇 Pass the request object so the template can use `request.user`
+    html_string = render_to_string('services/attendance_pdf.html', context, request=request)
 
     response = HttpResponse(content_type='application/pdf')
     filename = f"UCF_Attendance_{timezone.localdate()}.pdf"
@@ -1386,7 +1124,250 @@ def download_attendance_pdf(request):
 
     return response
 
-# --- Sermons ---
+
+# ============================================================
+# EMAIL REPORTS
+# ============================================================
+
+@login_required
+def email_attendance_report(request):
+    if not (request.user.member.role in ['admin', 'leader']):
+        raise PermissionDenied
+        
+    today = timezone.localdate()
+    attendance = ServiceAttendance.objects.filter(service_date=today)
+    
+    if not attendance.exists():
+        messages.warning(request, "No attendance recorded today yet.")
+        return redirect('dashboard')
+
+    total = attendance.count()
+    unique = attendance.values('member').distinct().count()
+    first = attendance.filter(session='first').count()
+    second = attendance.filter(session='second').count()
+    midweek = attendance.filter(session='midweek').count()
+
+    report_text = (
+        f"UCF Attendance Report for {today.strftime('%B %d, %Y')}\n\n"
+        f"Total Check-ins: {total}\n"
+        f"Unique Members: {unique}\n\n"
+        f"First Service: {first}\n"
+        f"Second Service: {second}\n"
+        f"Mid-Week: {midweek}\n\n"
+        f"Please log in to the app for the full detailed list."
+    )
+
+    recipients = list(Member.objects.filter(role='admin').values_list('user__email', flat=True))
+    usher_dept = Department.objects.filter(name__icontains='usher').first()
+    if usher_dept:
+        usher_leaders = usher_dept.members.filter(role__in=['leader', 'admin']).values_list('user__email', flat=True)
+        recipients.extend(usher_leaders)
+
+    recipients = [email for email in set(recipients) if email]
+    if recipients:
+        send_ucf_email(f"Attendance Report - {today}", report_text, recipients)
+        messages.success(request, f"Attendance report emailed to {len(recipients)} recipients.")
+    else:
+        messages.error(request, "No valid email addresses found for Admins or Usher Leaders.")
+
+    return redirect('dashboard')
+
+
+# ============================================================
+# CHAT SYSTEM
+# ============================================================
+
+@login_required
+def chat_dashboard(request):
+    user = request.user
+    member = user.member
+
+    direct_rooms = ChatRoom.objects.filter(room_type='direct', participants=user).order_by('-created_at')
+
+    dept_room = None
+    if member.department:
+        dept_room, _ = ChatRoom.objects.get_or_create(
+            room_type='department',
+            department=member.department,
+            defaults={'name': f"{member.department.name} Chat"}
+        )
+
+    leaders_room = None
+    if member.role in ['admin', 'leader']:
+        leaders_room, _ = ChatRoom.objects.get_or_create(
+            room_type='leaders',
+            defaults={'name': "All Leaders Chat"}
+        )
+
+    admins_room = None
+    if member.role == 'admin':
+        admins_room, _ = ChatRoom.objects.get_or_create(
+            room_type='admins',
+            defaults={'name': "Admins Only Chat"}
+        )
+
+    return render(request, 'chat/dashboard.html', {
+        'direct_rooms': direct_rooms,
+        'dept_room': dept_room,
+        'leaders_room': leaders_room,
+        'admins_room': admins_room,
+    })
+
+@login_required
+def chat_room(request, room_id):
+    room = get_object_or_404(ChatRoom, id=room_id)
+    user = request.user
+    member = user.member
+
+    if room.room_type == 'direct' and user not in room.participants.all():
+        raise PermissionDenied
+    elif room.room_type == 'department' and member.department != room.department:
+        raise PermissionDenied
+    elif room.room_type == 'leaders' and member.role not in ['admin', 'leader']:
+        raise PermissionDenied
+    elif room.room_type == 'admins' and member.role != 'admin':
+        raise PermissionDenied
+
+    if request.method == 'POST':
+        content = request.POST.get('content', '').strip()
+        if content:
+            msg = Message.objects.create(room=room, sender=user, content=content)
+            
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'status': 'success',
+                    'message': msg.content,
+                    'sender_id': user.id,
+                    'sender_name': user.get_full_name() or user.username,
+                    'time': msg.timestamp.strftime('%H:%M')
+                })
+            
+            return redirect('chat_room', room_id=room.id)
+
+    messages_list = room.messages.all().order_by('timestamp')
+    return render(request, 'chat/room.html', {'room': room, 'messages': messages_list})
+
+@login_required
+def start_direct_chat(request, user_id):
+    other_user = get_object_or_404(User, id=user_id)
+    if other_user == request.user:
+        messages.error(request, "You cannot message yourself.")
+        return redirect('member_list')
+
+    room = ChatRoom.objects.filter(room_type='direct', participants=request.user).filter(participants=other_user).first()
+    
+    if not room:
+        room = ChatRoom.objects.create(
+            room_type='direct',
+            name=f"{request.user.username} & {other_user.username}"
+        )
+        room.participants.add(request.user, other_user)
+
+    return redirect('chat_room', room_id=room.id)
+
+
+# ============================================================
+# MEDIA DEPARTMENT (Equipment & Events)
+# ============================================================
+
+@login_required
+@media_required
+def media_dashboard(request):
+    categories = EquipmentCategory.objects.all()
+    total_equipment = Equipment.objects.count()
+    lent_equipment = Equipment.objects.filter(status='lent').count()
+    
+    active_loans = EquipmentLoan.objects.filter(actual_return__isnull=True).order_by('expected_return')
+    
+    today = timezone.now().date()
+    upcoming_events = ExternalEvent.objects.filter(event_date__gte=today, is_completed=False).order_by('event_date')
+
+    return render(request, 'media/dashboard.html', {
+        'categories': categories,
+        'total_equipment': total_equipment,
+        'lent_equipment': lent_equipment,
+        'active_loans': active_loans,
+        'upcoming_events': upcoming_events,
+    })
+
+@login_required
+@media_required
+def equipment_list(request):
+    categories = EquipmentCategory.objects.prefetch_related('equipment').all()
+    return render(request, 'media/equipment_list.html', {'categories': categories})
+
+@login_required
+@media_required
+def equipment_add(request):
+    if request.method == 'POST':
+        form = EquipmentForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Equipment added successfully.")
+            return redirect('equipment_list')
+    else:
+        form = EquipmentForm()
+    return render(request, 'media/equipment_form.html', {'form': form, 'title': 'Add New Equipment'})
+
+@login_required
+@media_required
+def lend_equipment(request):
+    if request.method == 'POST':
+        form = EquipmentLoanForm(request.POST)
+        if form.is_valid():
+            loan = form.save(commit=False)
+            loan.authorized_by = request.user
+            loan.save()
+            
+            loan.equipment.status = 'lent'
+            loan.equipment.save()
+            
+            messages.success(request, f"{loan.equipment.name} lent to {loan.borrower_name}.")
+            return redirect('media_dashboard')
+    else:
+        form = EquipmentLoanForm()
+    return render(request, 'media/equipment_form.html', {'form': form, 'title': 'Lend Equipment'})
+
+@login_required
+@media_required
+@require_POST
+def return_equipment(request, loan_id):
+    loan = get_object_or_404(EquipmentLoan, id=loan_id)
+    if not loan.actual_return:
+        loan.actual_return = timezone.now()
+        loan.save()
+        
+        loan.equipment.status = 'available'
+        loan.equipment.save()
+        messages.success(request, f"{loan.equipment.name} returned successfully.")
+    return redirect('media_dashboard')
+
+@login_required
+@media_required
+def external_events_list(request):
+    events = ExternalEvent.objects.all().order_by('-event_date')
+    return render(request, 'media/external_events.html', {'events': events})
+
+@login_required
+@media_required
+def add_external_event(request):
+    if request.method == 'POST':
+        form = ExternalEventForm(request.POST)
+        if form.is_valid():
+            event = form.save(commit=False)
+            event.created_by = request.user
+            event.save()
+            messages.success(request, "External event registered.")
+            return redirect('external_events_list')
+    else:
+        form = ExternalEventForm()
+    return render(request, 'media/equipment_form.html', {'form': form, 'title': 'Register External Event'})
+
+
+# ============================================================
+# SERMONS & GALLERY
+# ============================================================
+
 def sermon_list(request):
     sermons = Sermon.objects.all()
     return render(request, 'media/sermon_list.html', {'sermons': sermons})
@@ -1408,7 +1389,6 @@ def add_sermon(request):
         form = SermonForm()
     return render(request, 'media/add_sermon.html', {'form': form})
 
-# --- Gallery ---
 def gallery_list(request):
     galleries = ServiceGallery.objects.prefetch_related('photos').all()
     return render(request, 'media/gallery_list.html', {'galleries': galleries})
