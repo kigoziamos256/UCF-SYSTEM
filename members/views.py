@@ -1115,11 +1115,11 @@ def download_attendance_pdf(request):
         with Image.open(logo_path).convert("RGBA") as logo:
             # Reduce opacity to ~6% so it's a soft ghost
             alpha = logo.split()[3]
-            alpha = alpha.point(lambda p: int(p * 0.06))
+            alpha = alpha.point(lambda p: int(p * 0.03))
             logo.putalpha(alpha)
 
             # Apply a gentle blur
-            logo = logo.filter(ImageFilter.GaussianBlur(radius=4))
+            logo = logo.filter(ImageFilter.GaussianBlur(radius=6))
 
             # Encode as base64 data URI
             buf = BytesIO()
