@@ -15,6 +15,7 @@ from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.templatetags.static import static
 from xhtml2pdf import pisa
+from io import BytesIO
 
 import qrcode
 import io
@@ -1078,6 +1079,8 @@ def attendance_export_csv(request):
 @login_required
 @admin_required
 def download_attendance_pdf(request):
+    from io import BytesIO
+
     from_date = request.GET.get('from')
     to_date = request.GET.get('to')
     service_id = request.GET.get('service')
@@ -1107,21 +1110,24 @@ def download_attendance_pdf(request):
         'generated_on': timezone.now(),
         'from_date': from_date,
         'to_date': to_date,
-        'generated_by': request.user.get_full_name() or request.user.username, # 👈 ADDED FALLBACK
+        'generated_by': request.user.get_full_name() or request.user.username,
     }
 
-    # 👇 Pass the request object so the template can use `request.user`
     html_string = render_to_string('services/attendance_pdf.html', context, request=request)
 
-    response = HttpResponse(content_type='application/pdf')
+    # ✅ Render into a buffer first, so we can verify the PDF actually has data
+    result = BytesIO()
+    pisa_status = pisa.CreatePDF(html_string, dest=result)
+
+    # Only treat as a real error if the resulting PDF is empty (0 bytes)
+    if result.getbuffer().nbytes == 0:
+        messages.error(request, "There was a problem generating the PDF. Please try again.")
+        return redirect('attendance_report')
+
+    # PDF is valid — send it to the user
+    response = HttpResponse(result.getvalue(), content_type='application/pdf')
     filename = f"UCF_Attendance_{timezone.localdate()}.pdf"
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-    pisa_status = pisa.CreatePDF(html_string, dest=response)
-
-    if pisa_status.err:
-        return HttpResponse('Error generating PDF: <pre>' + html_string + '</pre>')
-
     return response
 
 
