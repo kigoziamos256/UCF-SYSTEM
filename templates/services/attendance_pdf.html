@@ -9,8 +9,8 @@
             {% if watermark_uri %}
             background-image: url('{{ watermark_uri }}');
             background-repeat: no-repeat;
-            background-position: center;
-            background-size: 420px;
+            background-position: center center;
+            background-size: 380px;
             {% endif %}
         }
 
@@ -169,7 +169,7 @@
     </table>
 
     <div class="footer">
-        Report generated on {{ generated_on|date:"F d, Y \a\t H:i" }} by {{ request.user.get_full_name|default:request.user.username }}.
+        Report generated on {{ generated_on|date:"F d, Y \a\t H:i" }} by {{ generated_by }}.
     </div>
 
 </body>
