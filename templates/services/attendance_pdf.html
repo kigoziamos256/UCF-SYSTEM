@@ -6,11 +6,12 @@
         @page {
             size: A4;
             margin: 2cm;
-            /* Watermark */
-            background-image: url('{{ logo_url }}');
+            {% if watermark_uri %}
+            background-image: url('{{ watermark_uri }}');
             background-repeat: no-repeat;
             background-position: center;
-            background-size: 500px; /* Adjust to make it subtle */
+            background-size: 420px;
+            {% endif %}
         }
 
         body {
