@@ -1,3 +1,8 @@
+import os
+import base64
+from io import BytesIO
+from PIL import Image, ImageFilter
+from django.conf import settings
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth import login, logout
@@ -1103,10 +1108,32 @@ def download_attendance_pdf(request):
 
     logo_url = request.build_absolute_uri(static('images/ucf-logo.png'))
 
+    # 👇 Generate a faded, blurred watermark (in-memory, no file saved)
+    watermark_uri = None
+    try:
+        logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ucf-logo.png')
+        with Image.open(logo_path).convert("RGBA") as logo:
+            # Reduce opacity to ~6% so it's a soft ghost
+            alpha = logo.split()[3]
+            alpha = alpha.point(lambda p: int(p * 0.06))
+            logo.putalpha(alpha)
+
+            # Apply a gentle blur
+            logo = logo.filter(ImageFilter.GaussianBlur(radius=4))
+
+            # Encode as base64 data URI
+            buf = BytesIO()
+            logo.save(buf, format="PNG")
+            b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+            watermark_uri = f"data:image/png;base64,{b64}"
+    except Exception as e:
+        print(f"⚠️ Watermark generation failed: {e}")
+
     context = {
         'attendances': qs,
         'summary': summary,
         'logo_url': logo_url,
+        'watermark_uri': watermark_uri,   # 👈 new
         'generated_on': timezone.now(),
         'from_date': from_date,
         'to_date': to_date,
@@ -1115,16 +1142,13 @@ def download_attendance_pdf(request):
 
     html_string = render_to_string('services/attendance_pdf.html', context, request=request)
 
-    # ✅ Render into a buffer first, so we can verify the PDF actually has data
     result = BytesIO()
     pisa_status = pisa.CreatePDF(html_string, dest=result)
 
-    # Only treat as a real error if the resulting PDF is empty (0 bytes)
     if result.getbuffer().nbytes == 0:
         messages.error(request, "There was a problem generating the PDF. Please try again.")
         return redirect('attendance_report')
 
-    # PDF is valid — send it to the user
     response = HttpResponse(result.getvalue(), content_type='application/pdf')
     filename = f"UCF_Attendance_{timezone.localdate()}.pdf"
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
