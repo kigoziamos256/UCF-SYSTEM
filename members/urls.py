@@ -111,5 +111,6 @@ urlpatterns = [
     path('gallery/', views.gallery_list, name='gallery_list'),
     path('gallery/<int:gallery_id>/', views.gallery_detail, name='gallery_detail'),
     path('gallery/add/', views.add_gallery, name='add_gallery'),
+    path('services/attendance-report/pdf/', views.download_attendance_pdf, name='download_attendance_pdf'),
 
 ]
